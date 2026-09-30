@@ -19,16 +19,14 @@ or prefix every command with `npx -y @deepseek-ai/dsh` — no install, but the f
 ### Option 1 — one command via `dsh plugin` (recommended)
 
 ```sh
-dsh plugin --profile web add dsh-mattpocock-skills
-# no global dsh installed? same command via npx:
-npx -y @deepseek-ai/dsh plugin --profile web add dsh-mattpocock-skills
-```
-
-That is a pnpm install into the profile plus layer activation; verify with `dsh --profile web --dump-config` (a `# == dsh-mattpocock-skills` layer appears), then start a session on that profile. Works from npm, or from git:
-
-```sh
 dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills
+# no global dsh installed? same command via npx:
+npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills
 ```
+
+That is a pnpm install into the profile plus layer activation; verify with `dsh --profile web --dump-config` (a `# == dsh-mattpocock-skills` layer appears), then start a session on that profile.
+
+> **Not published to npm.** Install from git as shown above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package — do not use it.
 
 The bundle carries its skills inside the package (a plugin registers them at rank 400), so nothing else is needed.
 

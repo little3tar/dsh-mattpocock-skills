@@ -19,16 +19,14 @@ npm install -g @deepseek-ai/dsh
 ### 方式 1 —— `dsh plugin` 一行命令（推荐）
 
 ```sh
-dsh plugin --profile web add dsh-mattpocock-skills
-# 没装全局 dsh？用 npx 跑同一条命令：
-npx -y @deepseek-ai/dsh plugin --profile web add dsh-mattpocock-skills
-```
-
-这是向 profile 内做一次 pnpm 安装并激活配置层；用 `dsh --profile web --dump-config` 验证（会出现 `# == dsh-mattpocock-skills` 层），然后在该 profile 上开启会话。npm 与 git 源均可：
-
-```sh
 dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills
+# 没装全局 dsh？用 npx 跑同一条命令：
+npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills
 ```
+
+这是向 profile 内做一次 pnpm 安装并激活配置层；用 `dsh --profile web --dump-config` 验证（会出现 `# == dsh-mattpocock-skills` 层），然后在该 profile 上开启会话。
+
+> **本包未发布到 npm。** 请按上面的 git 形式安装。裸包名 `dsh-mattpocock-skills` 指向 npm 上另一个无关的包，不要用它。
 
 技能随包携带（由插件以 rank 400 注册），无需其他配置。
 

@@ -9,11 +9,12 @@ The user's dsh version determines nothing about these steps — all channels wor
 1. **Preferred — `dsh plugin` (bundle channel, per-profile):**
 
    ```sh
-   dsh plugin --profile <name> add dsh-mattpocock-skills        # from npm
-   dsh plugin --profile <name> add github:<owner>/dsh-mattpocock-skills   # from git
+   dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills
    ```
 
-   If `dsh` is not a global command, run the same through the CLI package: `npx -y @deepseek-ai/dsh plugin --profile <name> add dsh-mattpocock-skills` (first run downloads the CLI; or install it once with `npm install -g @deepseek-ai/dsh`).
+   This pack is **not published to npm**: always install it from git, as above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package.
+
+   If `dsh` is not a global command, run the same through the CLI package: `npx -y @deepseek-ai/dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills` (first run downloads the CLI; or install it once with `npm install -g @deepseek-ai/dsh`).
 
    Verify with `dsh --profile <name> --dump-config` — a `# == dsh-mattpocock-skills` layer must appear.
 
