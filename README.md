@@ -99,6 +99,7 @@ Start with `/ask-matt` after running `/setup-matt-pocock-skills` once in your re
 ## Development
 
 ```sh
+npm test                         # unit tests for the adaptation rules
 node scripts/verify-skills.mjs   # frontmatter contract + adaptation checks
 ```
 

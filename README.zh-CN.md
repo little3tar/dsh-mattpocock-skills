@@ -99,6 +99,7 @@ agent 会读本仓库的 [AGENTS.md](AGENTS.md) 并完成安装（clone + `scrip
 ## 开发
 
 ```sh
+npm test                         # 适配规则单元测试
 node scripts/verify-skills.mjs   # 校验 frontmatter 契约与适配状态
 ```
 

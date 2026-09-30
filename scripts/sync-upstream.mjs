@@ -192,7 +192,7 @@ async function detectDefaultEol(dir, fallback = '\r\n') {
 }
 
 /** Apply the dsh adaptation rules; returns the text and the rules that fired. */
-function adapt(text) {
+export function adapt(text) {
   const fired = new Set()
   let out = text
   for (const rule of ADAPT_RULES) {
@@ -401,6 +401,9 @@ async function main() {
       dryRun,
       report: report.length > 0 ? path.relative(REPO_ROOT, reportPath) : null,
     }, null, 2))
+    if (!dryRun) {
+      console.log(`\nnext: git tag sync/${targetSha.slice(0, 8)} && git push --tags   # record this sync point`)
+    }
   } finally {
     for (const dir of Object.values(worktrees)) {
       run('git', ['-C', cacheDir, 'worktree', 'remove', '--force', dir], { allowFailure: true })
@@ -409,4 +412,7 @@ async function main() {
   }
 }
 
-await main()
+/** Run the sync only when executed directly, so the rules stay unit-testable. */
+if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main()
+}

@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "verify:skills": "node scripts/verify-skills.mjs",
+    "test": "node --test \"scripts/**/*.test.mjs\"",
     "sync:upstream": "node scripts/sync-upstream.mjs"
   },
   "keywords": [

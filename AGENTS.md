@@ -36,6 +36,7 @@ After installing either way, tell the user: new sessions pick the skills up auto
 - `scripts/install.sh`, `scripts/install.ps1` — directory-drop installers
 - `scripts/verify-skills.mjs` — frontmatter contract and adaptation checks; run before committing
 - `scripts/sync-upstream.mjs` — re-sync from upstream (three-way merge + adaptation rules); see PROVENANCE.md
+- `scripts/sync-upstream.test.mjs` — unit tests for those rules (`npm test`); extend them whenever you add or change a rule
 - `PROVENANCE.md` — pinned upstream commit and the adaptation rules; read it before editing skill bodies
 - `README.md` / `README.zh-CN.md` — install and usage documentation
 
@@ -45,7 +46,7 @@ After installing either way, tell the user: new sessions pick the skills up auto
 - Model-facing instructions load other skills via the `skill` tool ("call the `skill` tool with name `x`"); `/name` slash syntax is reserved for text the user types (a valid dsh gesture for every skill here).
 - Subagents are spawned with the `subagent` tool; parallel means several calls in one message, background means `run_in_background: true`.
 - `/compact` is a real dsh command; there is no `/clear` — write "start a new session" instead.
-- Keep all 27 skill names identical to upstream (shadowing and re-sync depend on it). Run `node scripts/verify-skills.mjs` before committing.
+- Keep all 27 skill names identical to upstream (shadowing and re-sync depend on it). Run `npm test` and `node scripts/verify-skills.mjs` before committing.
 
 ## Re-syncing from upstream
 

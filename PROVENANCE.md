@@ -61,12 +61,21 @@ Upstream removed `resolving-merge-conflicts` after the previous pin, so this pac
 
 ```sh
 node scripts/sync-upstream.mjs --ours skills --out skills --baseline <pinned sha> --to <sha|HEAD>
+npm test                        # the rules are data; this pins their behaviour
+node scripts/verify-skills.mjs  # frontmatter contract + adaptation leftovers
+git tag -a sync/<upstream short sha> -m "adapted from mattpocock/skills <full sha>"
+git push --tags
 ```
 
 The script shallow-fetches both commits, three-way merges every promoted skill
 (`ours` = this pack, `base` = the pinned commit, `theirs` = the target),
 re-applies rules 1–5, and writes `.sync-conflicts.md` listing every block it
-resolved by taking upstream's side. Review that report, run
-`node scripts/verify-skills.mjs`, then update the pinned commit above and
-`.upstream.json`. `--prune` also drops skills upstream removed; without it they
-are kept and reported, so a removal stays a deliberate step.
+resolved by taking upstream's side. Review that report, run the checks above,
+then update the pinned commit in this file and `.upstream.json`. The script
+prints the tag command for the target commit when it finishes. `--prune` also
+drops skills upstream removed; without it they are kept and reported, so a
+removal stays a deliberate step.
+
+Tags name the **upstream** commit rather than ours, so `sync/d81f3a1` records
+exactly which upstream revision a given pack state was adapted from.
+`.upstream.json` describes only the current pin; the tags carry the history.
