@@ -38,6 +38,7 @@ After installing either way, tell the user: new sessions pick the skills up auto
 - `scripts/verify-skills.mjs` — frontmatter contract and adaptation checks; run before committing
 - `scripts/sync-upstream.mjs` — regenerate `skills/` from upstream (upstream + adaptation rules, no merge), or `--check` the pack against its pin; see PROVENANCE.md
 - `scripts/sync-upstream.test.mjs` — unit tests for those rules (`npm test`); extend them whenever you add or change a rule
+- `.github/workflows/checks.yml` — CI: `npm test`, `verify-skills.mjs`, and `sync-upstream.mjs --check` on every push
 - `PROVENANCE.md` — pinned upstream commit and the adaptation rules; read it before editing skill bodies
 - `README.md` / `README.zh-CN.md` — install and usage documentation
 

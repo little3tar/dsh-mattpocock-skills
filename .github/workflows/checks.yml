@@ -1,0 +1,25 @@
+# The pack is generated from upstream, so the invariants are cheap to check and
+# worth checking on every push: a hand edit to skills/ would be silently reverted
+# by the next sync, and a rule upstream rewording has invalidated stops firing.
+name: checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # No install step: the package has no dependencies.
+      - name: adaptation rules
+        run: npm test
+      - name: frontmatter + adaptation leftovers
+        run: node scripts/verify-skills.mjs
+      # Fetches the pinned commit from mattpocock/skills and re-derives the pack.
+      - name: pack is reproducible from its pin
+        run: node scripts/sync-upstream.mjs --check

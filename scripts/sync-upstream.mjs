@@ -38,8 +38,8 @@ const UPSTREAM_URL = 'https://github.com/mattpocock/skills.git'
 const STATE_FILE = '.upstream.json'
 /** Upstream buckets whose skills are promoted into the plugin manifest. */
 const MANIFEST = '.claude-plugin/plugin.json'
-/** Excluded from the adapted pack: harness-specific adapter files and bucket indexes. */
-const EXCLUDED_FILES = new Set(['agents/openai.yaml', 'README.md'])
+/** Excluded from the adapted pack: the Codex adapter metadata every skill ships. */
+const EXCLUDED_FILES = new Set(['agents/openai.yaml'])
 
 /**
  * dsh adaptation rules, applied in order to every upstream body (PROVENANCE.md).
@@ -395,7 +395,11 @@ async function main() {
     for (const rel of [...diff.added, ...diff.changed.map((item) => item.path)]) {
       await writeText(path.join(outDir, rel), await readText(path.join(generatedDir, rel)), eol)
     }
-    await writeText(statePath, `${JSON.stringify({ upstream: UPSTREAM_URL, baseCommit: target, syncedAt: new Date().toISOString() }, null, 2)}\n`)
+    // The pin record only moves when the pin moves, so a no-op sync leaves the
+    // working tree untouched.
+    if (state.baseCommit !== target) {
+      await writeText(statePath, `${JSON.stringify({ upstream: UPSTREAM_URL, baseCommit: target, syncedAt: new Date().toISOString() }, null, 2)}\n`)
+    }
 
     console.log(`synced: ${diff.changed.length} updated, ${diff.added.length} added, ${diff.extraFiles.length} removed, ${diff.extraSkillDirs.length} skill dir(s) ${prune ? 'pruned' : 'extra'}`)
     if (state.baseCommit !== target) {
