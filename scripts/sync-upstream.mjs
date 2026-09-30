@@ -49,14 +49,9 @@ const EXCLUDED_FILES = new Set(['agents/openai.yaml', 'README.md'])
  */
 const ADAPT_RULES = [
   { name: 'drop argument-hint frontmatter', pattern: /^argument-hint:.*\n/gm, replace: '' },
-  // dsh's skill loader parses flat `key: value` frontmatter only, so a nested
-  // block (upstream `pr` carries metadata.credits) would make the skill
-  // unloadable. Attribution for `pr` lives in its CREDITS.md instead.
-  {
-    name: 'drop nested metadata frontmatter (flat keys only)',
-    pattern: /^metadata:\n(?:[ \t]+.*\n)*/gm,
-    replace: '',
-  },
+  // `metadata` and `whenToUse` are supported by dsh's loader (YAML frontmatter,
+  // then `optionalMetadata`/`optionalString`), so upstream `pr`'s
+  // `metadata.credits` is kept as-is; only `argument-hint` is dead weight.
   {
     name: 'Skill tool -> `skill` tool (quoted name)',
     pattern: /([Cc]all(?:s|ing)?) the Skill tool with "([^"]+)"/g,

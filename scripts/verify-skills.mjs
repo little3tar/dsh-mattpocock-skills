@@ -49,13 +49,15 @@ async function listFiles(dir) {
   return found.sort()
 }
 
-/** Flat `key: value` frontmatter, the subset dsh's skill loader accepts. */
+/** Flat `key: value` frontmatter plus nested blocks, the shape dsh's loader accepts. */
 function parseFrontmatter(raw, label) {
   const lines = normalize(raw).split('\n')
   if (lines[0] !== '---') throw new Error(`${label}: no frontmatter block`)
   const fields = {}
   let index = 1
   for (; index < lines.length && lines[index] !== '---'; index++) {
+    // An indented line belongs to the key above it (`metadata:` mappings).
+    if (/^[ \t]/.test(lines[index])) continue
     const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(lines[index])
     if (match === null) throw new Error(`${label}: unparseable frontmatter line "${lines[index]}"`)
     fields[match[1]] = match[2].replace(/^["']|["']$/g, '').trim()
@@ -92,9 +94,13 @@ async function main() {
     if (fields.name !== name) problems.push(`${name}: frontmatter name "${fields.name}" != directory name`)
     if (!fields.description) problems.push(`${name}: frontmatter has no description (the only routing signal)`)
     for (const key of Object.keys(fields)) {
-      if (!['name', 'description', 'disable-model-invocation', 'user-invocable'].includes(key)) {
+      if (!['name', 'description', 'whenToUse', 'metadata', 'disable-model-invocation', 'user-invocable'].includes(key)) {
         problems.push(`${name}: unsupported frontmatter field "${key}"`)
       }
+    }
+    // dsh keeps `metadata` only when it is a mapping (nested block, or `{...}`).
+    if (fields.metadata !== undefined && fields.metadata !== '' && !fields.metadata.startsWith('{')) {
+      problems.push(`${name}: metadata must be a mapping, not "${fields.metadata}"`)
     }
 
     for (const rel of await listFiles(dir)) {

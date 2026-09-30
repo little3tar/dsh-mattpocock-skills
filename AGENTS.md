@@ -43,7 +43,7 @@ After installing either way, tell the user: new sessions pick the skills up auto
 
 ## Conventions when editing skills
 
-- Frontmatter stays the flat dsh subset: `name`, `description`, `disable-model-invocation`, `user-invocable`. No `argument-hint`, no `agents/openai.yaml`, and no nested block such as upstream `pr`'s `metadata:` — dsh's loader parses flat `key: value` only.
+- Frontmatter stays within what dsh's loader actually reads: `name` and `description` (required), plus `whenToUse`, `metadata`, `disable-model-invocation`, `user-invocable`. Unknown keys are ignored by the loader, so a field like `argument-hint` is dropped as dead weight; `agents/openai.yaml` never ships; upstream `pr`'s nested `metadata:` is kept as-is.
 - Model-facing instructions load other skills via the `skill` tool ("call the `skill` tool with name `x`"); `/name` slash syntax is reserved for text the user types (a valid dsh gesture for every skill here).
 - Subagents are spawned with the `subagent` tool; parallel means several calls in one message, background means `run_in_background: true`.
 - `/compact` is a real dsh command; there is no `/clear` — write "start a new session" instead.

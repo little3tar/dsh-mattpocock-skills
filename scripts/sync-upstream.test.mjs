@@ -78,15 +78,13 @@ test("ask-matt's command catalogue keeps its slashes", () => {
   assert.equal(adapt(line, 'ask-matt/SKILL.md').text, line)
 })
 
-test('frontmatter dsh cannot parse is dropped', () => {
+test('frontmatter: argument-hint is dropped, dsh-supported fields are kept', () => {
   applies(
     '---\nname: handoff\nargument-hint: "What will the next session be used for?"\n---\nbody\n',
     '---\nname: handoff\n---\nbody\n',
   )
-  applies(
-    '---\nname: pr\ndescription: "Use when writing a PR body."\nmetadata:\n  credits:\n    skill: show-me\n    author: Dex Horthy\n---\nbody\n',
-    '---\nname: pr\ndescription: "Use when writing a PR body."\n---\nbody\n',
-  )
+  const pr = '---\nname: pr\ndescription: "Use when writing a PR body."\nmetadata:\n  credits:\n    skill: show-me\n    author: Dex Horthy\n---\nbody\n'
+  assert.equal(adapt(pr).text, pr)
 })
 
 test('code-review section 4 keeps the one-message dispatch note', () => {
