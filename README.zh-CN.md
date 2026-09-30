@@ -26,6 +26,8 @@ npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpococ
 
 这是向 profile 内做一次 pnpm 安装并激活配置层；用 `dsh --profile web --dump-config` 验证（会出现 `# == dsh-mattpocock-skills` 层），然后在该 profile 上开启会话。
 
+不带 ref 的 `github:` 写法解析的是仓库**默认分支**，重新安装可能拿到更新的提交。要可复现安装就钉住发布：`dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.0`（或写 commit sha）。
+
 > **本包未发布到 npm。** 请按上面的 git 形式安装。裸包名 `dsh-mattpocock-skills` 指向 npm 上另一个无关的包，不要用它。
 
 技能随包携带（以 custom skill root 的形式挂在 rank 300），无需其他配置。

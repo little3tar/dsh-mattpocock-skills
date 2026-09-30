@@ -15,6 +15,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # Release hygiene, and the only check that is inert on a branch push.
+      - name: release tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          package_version=$(node -p "require('./package.json').version")
+          if [ "v$package_version" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json v$package_version"
+            exit 1
+          fi
       # No install step: the package has no dependencies.
       - name: adaptation rules
         run: npm test

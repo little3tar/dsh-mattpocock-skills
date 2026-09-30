@@ -79,9 +79,22 @@ writing; `--prune` also drops skills upstream removed — without it they are ke
 and listed, so a removal stays a deliberate step. Update the pinned commit in
 this file after landing a sync.
 
-Tags name the **upstream** commit rather than ours, so `sync/d81f3a1` records
-exactly which upstream revision a given pack state was generated from.
+Tags name the **upstream** commit rather than ours, so a `sync/*` tag records
+exactly which upstream revision a pack state was generated from.
 `.upstream.json` describes only the current pin; the tags carry the history. If
 the fetch through a local proxy setup fails, export `HTTPS_PROXY` for the run
 (this host's local proxy is `http://127.0.0.1:2080`) — git on Windows does not
 read the system WinINET settings.
+
+### Tags
+
+- `vX.Y.Z` — a release of this pack: the state of `skills/` we hand out. Bump `version`
+  in `package.json` and tag the same commit; CI fails a `v*` tag whose name disagrees
+  with `package.json`.
+- `sync/<upstream short sha>` — **a sync point, not the newest pack for that pin**. The
+  name records the upstream commit; the tagged commit is where that sync landed. Because
+  the pack is `upstream + rules`, a later rule fix gives the same pin a newer pack:
+  `sync/d81f3a1` (`518cb95`) predates the first audit's three content corrections (4 files,
+  +14/−8), so checking it out yields the pre-audit adaptation. `git describe --tags
+  --match 'sync/*'` places a commit relative to the last sync; the current pack is `main`
+  or the newest `v*`.
