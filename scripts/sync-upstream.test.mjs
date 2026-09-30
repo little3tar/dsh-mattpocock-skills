@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 /**
- * Unit tests for the dsh adaptation rules that sync-upstream.mjs replays.
+ * Unit tests for the adaptation rules and the apply step in sync-upstream.mjs.
  *
  *   node --test scripts/
  *
  * The rules are data in sync-upstream.mjs; these tests pin their behaviour
- * against realistic upstream lines. The last block checks idempotence, which is
- * what catches two rules fighting over the same text.
+ * against realistic upstream lines. The last rule test checks idempotence, which
+ * is what catches two rules fighting over the same text. The apply-step tests
+ * work on throwaway directories, so they need neither git nor the network.
  */
 
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import fsp from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { test } from 'node:test'
 
-import { adapt } from './sync-upstream.mjs'
+import { adapt, applyChanges } from './sync-upstream.mjs'
 
 const applies = (input, expected) => assert.equal(adapt(input).text, expected)
 
@@ -173,4 +178,63 @@ test('rules are idempotent', () => {
   ].join('\n')
   const once = adapt(upstream).text
   assert.equal(adapt(once).text, once)
+})
+
+/** A throwaway out/generated pair for the apply-step tests. */
+async function applyFixture() {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'sync-apply-'))
+  const outDir = path.join(root, 'out')
+  const generatedDir = path.join(root, 'generated')
+  await fsp.mkdir(path.join(outDir, 'ask-matt'), { recursive: true })
+  await fsp.mkdir(path.join(generatedDir, 'ask-matt'), { recursive: true })
+  await fsp.writeFile(path.join(outDir, 'ask-matt', 'STALE.md'), 'stale\n')
+  await fsp.mkdir(path.join(outDir, 'obsolete-xyz'), { recursive: true })
+  await fsp.writeFile(path.join(outDir, 'obsolete-xyz', 'SKILL.md'), 'gone\n')
+  await fsp.writeFile(path.join(generatedDir, 'ask-matt', 'SKILL.md'), 'fresh\n')
+  return {
+    outDir,
+    generatedDir,
+    diff: {
+      added: ['ask-matt/SKILL.md'],
+      extraFiles: ['ask-matt/STALE.md'],
+      extraSkillDirs: ['obsolete-xyz'],
+      changed: [],
+    },
+    cleanup: () => fsp.rm(root, { recursive: true, force: true }),
+  }
+}
+
+test('applyChanges drops a stale file inside a promoted skill, but keeps an un-promoted skill dir', async () => {
+  const { outDir, generatedDir, diff, cleanup } = await applyFixture()
+  try {
+    await applyChanges(diff, outDir, generatedDir)
+    assert.equal(fs.existsSync(path.join(outDir, 'ask-matt', 'STALE.md')), false)
+    assert.equal(fs.existsSync(path.join(outDir, 'obsolete-xyz')), true)
+    assert.equal(fs.readFileSync(path.join(outDir, 'ask-matt', 'SKILL.md'), 'utf8'), 'fresh\n')
+  } finally {
+    await cleanup()
+  }
+})
+
+test('applyChanges prunes the un-promoted skill dir only when asked', async () => {
+  const { outDir, generatedDir, diff, cleanup } = await applyFixture()
+  try {
+    await applyChanges(diff, outDir, generatedDir, { prune: true })
+    assert.equal(fs.existsSync(path.join(outDir, 'obsolete-xyz')), false)
+    assert.equal(fs.existsSync(path.join(outDir, 'ask-matt', 'STALE.md')), false)
+  } finally {
+    await cleanup()
+  }
+})
+
+test('applyChanges writes the requested line endings', async () => {
+  const { outDir, generatedDir, diff, cleanup } = await applyFixture()
+  try {
+    await applyChanges(diff, outDir, generatedDir, { eol: '\r\n' })
+    assert.equal(fs.readFileSync(path.join(outDir, 'ask-matt', 'SKILL.md'), 'utf8').includes('\r\n'), true)
+    await applyChanges(diff, outDir, generatedDir)
+    assert.equal(fs.readFileSync(path.join(outDir, 'ask-matt', 'SKILL.md'), 'utf8'), 'fresh\n')
+  } finally {
+    await cleanup()
+  }
 })

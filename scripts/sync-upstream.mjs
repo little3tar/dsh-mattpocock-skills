@@ -205,6 +205,22 @@ async function writeText(file, text, eol = '\n') {
 }
 
 /**
+ * Apply a `compareTrees` result to `outDir`. The generated tree is
+ * authoritative, so files it does not have inside a promoted skill always go;
+ * a whole extra skill directory is only removed with `prune`, because dropping
+ * a skill stays a deliberate step.
+ */
+export async function applyChanges(diff, outDir, generatedDir, { prune = false, eol = '\n' } = {}) {
+  for (const rel of diff.extraFiles) await fsp.rm(path.join(outDir, rel), { force: true })
+  if (prune) {
+    for (const name of diff.extraSkillDirs) await fsp.rm(path.join(outDir, name), { recursive: true, force: true })
+  }
+  for (const rel of [...diff.added, ...diff.changed.map((item) => item.path)]) {
+    await writeText(path.join(outDir, rel), await readText(path.join(generatedDir, rel)), eol)
+  }
+}
+
+/**
  * Apply the dsh adaptation rules; returns the text and the rules that fired.
  * `file` is the repo-relative path (`<skill>/<file>`), so a rule can exempt a
  * file whose text is not model-facing (see the de-slash rule).
@@ -384,16 +400,9 @@ async function main() {
 
     // Apply: the generated tree is authoritative, so stale files inside a
     // promoted skill always go; a whole extra skill directory needs --prune.
-    for (const rel of diff.extraFiles) await fsp.rm(path.join(outDir, rel), { force: true })
-    if (diff.extraSkillDirs.length > 0) {
-      if (prune) {
-        for (const name of diff.extraSkillDirs) await fsp.rm(path.join(outDir, name), { recursive: true, force: true })
-      } else {
-        console.log(`kept (pass --prune to remove): ${diff.extraSkillDirs.join(', ')}`)
-      }
-    }
-    for (const rel of [...diff.added, ...diff.changed.map((item) => item.path)]) {
-      await writeText(path.join(outDir, rel), await readText(path.join(generatedDir, rel)), eol)
+    await applyChanges(diff, outDir, generatedDir, { prune, eol })
+    if (!prune && diff.extraSkillDirs.length > 0) {
+      console.log(`kept (pass --prune to remove): ${diff.extraSkillDirs.join(', ')}`)
     }
     // The pin record only moves when the pin moves, so a no-op sync leaves the
     // working tree untouched.
