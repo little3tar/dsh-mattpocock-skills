@@ -52,7 +52,7 @@ rank 400（`~/.dsh/skills`）会遮蔽 `~/.agents/skills`（rank 500）里的同
 
 > 从 GitHub 安装 dsh-mattpocock-skills。
 
-agent 会读本仓库的 README 与 [PROVENANCE.md](PROVENANCE.md) 并完成安装（clone + `scripts/install.sh`，或按你的偏好走 `dsh plugin add`）。
+agent 会读本仓库的 [AGENTS.md](AGENTS.md) 并完成安装（clone + `scripts/install.sh`，或按你的偏好走 `dsh plugin add`）。
 
 ### 进阶 —— 挂载克隆目录而不复制
 

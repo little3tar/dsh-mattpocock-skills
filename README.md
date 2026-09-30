@@ -52,7 +52,7 @@ Tell any dsh session:
 
 > Install dsh-mattpocock-skills from GitHub.
 
-The agent reads this repo's README and [PROVENANCE.md](PROVENANCE.md) and completes the install (clone + `scripts/install.sh`, or `dsh plugin add` if you prefer).
+The agent reads [AGENTS.md](AGENTS.md) in this repo and completes the install (clone + `scripts/install.sh`, or `dsh plugin add` if you prefer).
 
 ### Advanced — mount the clone without copying
 
