@@ -1,5 +1,2 @@
 # Upstream git cache created by scripts/sync-upstream.mjs
 .upstream-cache/
-
-# Per-sync conflict report; keep only while reviewing a sync
-.sync-conflicts.md

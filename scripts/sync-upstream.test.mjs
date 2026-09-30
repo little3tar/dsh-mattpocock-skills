@@ -96,6 +96,62 @@ test('user-typed slash commands are left alone', () => {
   assert.equal(adapt(text).text, text)
 })
 
+test('/clear in the phase-boundary table becomes a new session', () => {
+  applies(
+    '| **`/clear`** | Empty the context window and start from nothing.                  |',
+    '| **New session** | Start from an empty context window.                  |',
+  )
+})
+
+test('the harness-swap example names dsh, not Codex', () => {
+  applies(
+    '- swapping to a **new harness** (Claude → Codex),',
+    '- swapping to a **new harness** (e.g. Claude Code → dsh),',
+  )
+})
+
+test('background agent becomes the named subagent tool', () => {
+  applies(
+    'Spin up a **background agent** to do the research, so you keep working while it reads.',
+    'Spin up a **background subagent** (the `subagent` tool with `run_in_background: true`) to do the research, so you keep working while it reads.',
+  )
+  // The un-bolded mention in research's description is a routing signal: untouched.
+  const description = 'Use when the user wants a topic researched, or legwork delegated to a background agent.'
+  assert.equal(adapt(description).text, description)
+})
+
+test('model-facing slash instructions become `skill` tool calls', () => {
+  applies(
+    'Use /tdd where possible, at pre-agreed seams.',
+    'Call the `skill` tool with name `tdd` and follow it where possible, at pre-agreed seams.',
+  )
+  applies(
+    'Once done, use /code-review to review the work.',
+    'Once done, call the `skill` tool with name `code-review` and review the work.',
+  )
+})
+
+test('the parallel dispatch names the one-message issue', () => {
+  applies(
+    'Spawn 3+ sub-agents in parallel. Each must produce a **radically different** interface.',
+    'Spawn 3+ subagents in parallel — one `subagent` tool call each, all issued in the same message. Each must produce a **radically different** interface.',
+  )
+})
+
+test('fact-finding dispatch names the subagent tool', () => {
+  applies(
+    "dispatch a sub-agent to find it; don't ask the user",
+    "dispatch a subagent (the `subagent` tool) to find it; don't ask the user",
+  )
+})
+
+test('handoff points at the `skill` tool and the user gesture', () => {
+  applies(
+    'naming which skills the next agent should call the Skill tool for.',
+    'naming which skills the next agent should load via the `skill` tool, or ask the user to invoke by name.',
+  )
+})
+
 test('rules are idempotent', () => {
   const upstream = [
     'Call the Skill tool with "grilling".',
@@ -103,6 +159,13 @@ test('rules are idempotent', () => {
     "`/clear` also isn't terminal: the old session stays resumable.",
     'straight from the `/codebase-design` skill',
     '**Spec sub-agent prompt** should include:',
+    '| **`/clear`** | Empty the context window and start from nothing. |',
+    '- swapping to a **new harness** (Claude → Codex),',
+    'Spin up a **background agent** to do the research.',
+    'Use /tdd where possible, at pre-agreed seams.',
+    'Spawn 3+ subagents in parallel. Each must produce an interface.',
+    'dispatch a subagent to find it',
+    'naming which skills the next agent should call the `skill` tool for.',
   ].join('\n')
   const once = adapt(upstream).text
   assert.equal(adapt(once).text, once)

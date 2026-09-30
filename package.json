@@ -1,6 +1,6 @@
 {
   "name": "dsh-mattpocock-skills",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Matt Pocock's engineering skills (grilling, spec/ticket flows, TDD, code review, domain modelling), adapted for DeepSeek Harness (dsh). Synced to upstream d81f3a1 — 27 skills.",
   "type": "module",
   "files": [
@@ -17,6 +17,7 @@
   ],
   "scripts": {
     "verify:skills": "node scripts/verify-skills.mjs",
+    "check:reproducible": "node scripts/sync-upstream.mjs --check",
     "test": "node --test \"scripts/**/*.test.mjs\"",
     "sync:upstream": "node scripts/sync-upstream.mjs"
   },

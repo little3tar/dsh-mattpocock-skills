@@ -22,6 +22,9 @@ const LEFTOVERS = [
   { label: '`argument-hint` frontmatter (Codex adapter field)', pattern: /^argument-hint:/m },
   { label: '`/clear` command (no dsh counterpart)', pattern: /`\/clear`/ },
   { label: 'slash-prefixed model-side skill reference', pattern: /`\/(codebase-design|grilling|domain-modeling)`/ },
+  { label: 'model-facing slash instruction (use the `skill` tool)', pattern: /[Uu]se \/(tdd|code-review)\b/ },
+  { label: 'unnormalised "background agent" (use "background subagent")', pattern: /\*\*background agent\*\*/ },
+  { label: 'harness-swap example still names Claude/Codex', pattern: /Claude → Codex/ },
 ]
 /** Paths inside a skill that belong to another harness. */
 const FORBIDDEN_PATHS = ['agents/openai.yaml']

@@ -1,34 +1,29 @@
 #!/usr/bin/env node
 /**
- * Re-adapt upstream mattpocock/skills into this repository's skills/ directory.
+ * Generate this repository's skills/ straight from upstream mattpocock/skills.
  *
- * The upstream skills target Claude Code. This repository carries the dsh
- * adaptation: a small rule set applied on top of upstream bodies (see
- * PROVENANCE.md). Syncing means three-way merging upstream's changes into the
- * already-adapted skills, then re-applying the rules.
- *
- *   ours   = this repository's skills/ (already adapted)
- *   base   = upstream at the commit this repository last synced from
- *   theirs = upstream at the target commit
+ * The pack is a pure function of upstream: every promoted skill file is read
+ * from the target commit, passed through the dsh adaptation rules below, and
+ * written out. There is no merge base and no three-way merge, so a sync cannot
+ * conflict. Upstream rewording that invalidates a rule is surfaced instead: the
+ * rule stops firing, and --check reports it.
  *
  * Usage:
- *   node scripts/sync-upstream.mjs --to <sha|HEAD> [options]
+ *   node scripts/sync-upstream.mjs [--to <sha|HEAD>] [--out <dir>] [--cache <dir>]
+ *                                  [--check] [--dry-run] [--prune] [--eol lf|crlf]
  *
  * Options:
- *   --baseline <sha>   upstream commit this repo is adapted from; defaults to
- *                      .upstream.json's baseCommit
- *   --to <sha>         upstream commit to sync to (default: origin HEAD)
- *   --ours <dir>       current adapted skills, read-only (default: --out)
- *   --out <dir>        destination for the adapted skills (default: <repo>/skills)
- *   --cache <dir>      git cache for the upstream clone (default: .upstream-cache)
- *   --report <file>    conflict report path (default: .sync-conflicts.md)
- *   --eol <mode>       output line endings: lf (default — matches upstream and
- *                      .gitattributes), auto (match the existing pack), or crlf.
- *                      Comparison always normalizes to LF, so a sync never
- *                      rewrites a file just for its EOL.
- *   --prune            also delete local skills that upstream removed
- *   --keep-conflicts   leave conflict markers in the output instead of taking upstream's side
- *   --dry-run          do not write skills/, only report
+ *   --to <sha>      upstream commit to generate from (default: HEAD)
+ *   --out <dir>     destination for the generated skills (default: <repo>/skills)
+ *   --cache <dir>   git clone used to read upstream (default: <repo>/.upstream-cache)
+ *   --check         verify <dir> is reproducible from --to; writes nothing; exits
+ *                   non-zero on any content drift, missing/extra file or skill,
+ *                   or rule that no longer fires. --to defaults to the pinned
+ *                   commit in .upstream.json, so --check answers "is what is
+ *                   committed reproducible from its pin?".
+ *   --dry-run       print what a sync would change; writes nothing
+ *   --prune         also delete local skill directories upstream no longer promotes
+ *   --eol <mode>    output line endings: lf (default, matches .gitattributes) or crlf
  */
 
 import { spawnSync } from 'node:child_process'
@@ -47,8 +42,10 @@ const MANIFEST = '.claude-plugin/plugin.json'
 const EXCLUDED_FILES = new Set(['agents/openai.yaml', 'README.md'])
 
 /**
- * dsh adaptation rules, applied to every upstream body (PROVENANCE.md).
+ * dsh adaptation rules, applied in order to every upstream body (PROVENANCE.md).
  * Each rule is `{ name, pattern, replace }` applied with String.replace.
+ * Every rule is expected to fire on the pinned commit; --check reports the ones
+ * that do not, which is how upstream rewording of adapted prose is caught.
  */
 const ADAPT_RULES = [
   { name: 'drop argument-hint frontmatter', pattern: /^argument-hint:.*\n/gm, replace: '' },
@@ -103,6 +100,11 @@ const ADAPT_RULES = [
     pattern: /`\/clear`ing context between each one/g,
     replace: 'starting a fresh session between each one',
   },
+  {
+    name: '/clear -> new session (table row)',
+    pattern: /\| \*\*`\/clear`\*\* \| Empty the context window and start from nothing\./g,
+    replace: '| **New session** | Start from an empty context window.',
+  },
   // Model-side skill references lose the slash; user-typed commands keep it.
   {
     name: 'de-slash model-side skill reference',
@@ -126,6 +128,16 @@ const ADAPT_RULES = [
     replace: 'spin up a subagent (`subagent` tool) that calls',
   },
   {
+    name: 'name the `subagent` tool (grilling facts)',
+    pattern: /dispatch a subagent to find it/g,
+    replace: 'dispatch a subagent (the `subagent` tool) to find it',
+  },
+  {
+    name: 'background agent -> background subagent',
+    pattern: /\*\*background agent\*\*/g,
+    replace: '**background subagent** (the `subagent` tool with `run_in_background: true`)',
+  },
+  {
     name: 'parallel subagent -> parallel-subagent',
     pattern: /parallel subagent pattern/g,
     replace: 'parallel-subagent pattern',
@@ -140,6 +152,33 @@ const ADAPT_RULES = [
     name: 'code-review: Spec prompt wording',
     pattern: /\*\*Spec subagent prompt\*\* should include:/g,
     replace: '**Spec subagent prompt** — include:',
+  },
+  {
+    name: 'codebase-design: name the one-message dispatch',
+    pattern: /Spawn 3\+ subagents in parallel\. Each must/g,
+    replace: 'Spawn 3+ subagents in parallel — one `subagent` tool call each, all issued in the same message. Each must',
+  },
+  // Model-side slash instructions the bodies hand the agent.
+  {
+    name: 'implement: /tdd -> `skill` tool',
+    pattern: /Use \/tdd where possible, at pre-agreed seams\./g,
+    replace: 'Call the `skill` tool with name `tdd` and follow it where possible, at pre-agreed seams.',
+  },
+  {
+    name: 'implement: /code-review -> `skill` tool',
+    pattern: /Once done, use \/code-review to review the work\./g,
+    replace: 'Once done, call the `skill` tool with name `code-review` and review the work.',
+  },
+  {
+    name: 'handoff: suggested-skills wording',
+    pattern: /naming which skills the next agent should call the `skill` tool for\./g,
+    replace: 'naming which skills the next agent should load via the `skill` tool, or ask the user to invoke by name.',
+  },
+  // Example harness swap: dsh is the second harness here, not Codex.
+  {
+    name: 'harness swap example',
+    pattern: /\(Claude → Codex\)/g,
+    replace: '(e.g. Claude Code → dsh)',
   },
 ]
 
@@ -161,34 +200,15 @@ function run(command, args, options = {}) {
 }
 
 const normalize = (text) => text.replace(/\r\n/g, '\n')
-const detectEol = (raw) => (raw.includes('\r\n') ? '\r\n' : '\n')
-async function readRaw(file) {
-  return fsp.readFile(file, 'utf8')
-}
+
 async function readText(file) {
-  return normalize(await readRaw(file))
+  return normalize(await fsp.readFile(file, 'utf8'))
 }
-/** Write with the target EOL; comparison and merging stay LF-only. */
+
+/** Write with the target EOL; comparison and generation stay LF-only. */
 async function writeText(file, text, eol = '\n') {
   await fsp.mkdir(path.dirname(file), { recursive: true })
   await fsp.writeFile(file, eol === '\n' ? text : text.replace(/\n/g, eol), 'utf8')
-}
-
-/**
- * Pick the default EOL for files with no local counterpart: whatever the
- * existing adapted pack mostly uses, so a sync never rewrites every line.
- */
-async function detectDefaultEol(dir, fallback = '\r\n') {
-  const files = (await listFiles(dir)).slice(0, 40)
-  if (files.length === 0) return fallback
-  let crlf = 0
-  let lf = 0
-  for (const rel of files) {
-    const raw = await readRaw(path.join(dir, rel))
-    if (raw.includes('\r\n')) crlf++
-    else if (raw.includes('\n')) lf++
-  }
-  return crlf >= lf ? '\r\n' : '\n'
 }
 
 /** Apply the dsh adaptation rules; returns the text and the rules that fired. */
@@ -203,7 +223,7 @@ export function adapt(text) {
   return { text: out, fired: [...fired] }
 }
 
-/** Recursively list files under `dir`, relative POSIX paths. */
+/** Recursively list files under `dir`, relative POSIX paths; [] when missing. */
 async function listFiles(dir) {
   const found = []
   async function walk(current) {
@@ -217,46 +237,63 @@ async function listFiles(dir) {
   return found.sort()
 }
 
-/** Three-way merge `ours`/`base`/`theirs` through git merge-file on temp copies. */
-function merge3(ours, base, theirs, tmpDir, key) {
-  const safe = key.replace(/[\\/]/g, '__')
-  const o = path.join(tmpDir, `${safe}.ours`)
-  const b = path.join(tmpDir, `${safe}.base`)
-  const t = path.join(tmpDir, `${safe}.theirs`)
-  fs.writeFileSync(o, ours, 'utf8')
-  fs.writeFileSync(b, base, 'utf8')
-  fs.writeFileSync(t, theirs, 'utf8')
-  const result = run('git', ['merge-file', '-p', '--diff3', o, b, t], { allowFailure: true })
-  return { text: normalize(result.stdout), conflicts: result.status ?? 0 }
+/** Line-aligned difference between two texts, for the report. */
+function diffLines(before, after, limit = 20) {
+  const a = before.split('\n')
+  const b = after.split('\n')
+  const hunks = []
+  for (let i = 0; i < Math.max(a.length, b.length) && hunks.length < limit; i++) {
+    if (a[i] === b[i]) continue
+    hunks.push({ line: i + 1, pack: a[i], expected: b[i] })
+  }
+  return hunks
 }
 
-const CONFLICT_BLOCK = /<<<<<<< [^\n]*\n([\s\S]*?)\|\|\|\|\|\|\| [^\n]*\n([\s\S]*?)=======\n([\s\S]*?)>>>>>>> [^\n]*\n/g
-
-/** Split a conflicted merge result into resolved text plus per-block records. */
-function describeConflicts(text) {
-  const blocks = []
-  const resolved = text.replace(CONFLICT_BLOCK, (_, ours, base, theirs) => {
-    blocks.push({ ours: ours.trimEnd(), base: base.trimEnd(), theirs: theirs.trimEnd() })
-    return theirs
-  })
-  return { blocks, resolved }
+/**
+ * Compare a skill tree against the freshly generated one. The generated tree is
+ * authoritative: every file it holds must match, and everything left over in
+ * `currentDir` is drift. Leftovers inside a promoted skill are stale files;
+ * leftovers that form a whole extra directory are skills upstream dropped.
+ */
+async function compareTrees(currentDir, generatedDir, promotedNames) {
+  const current = await listFiles(currentDir)
+  const generated = await listFiles(generatedDir)
+  const currentSet = new Set(current)
+  const generatedSet = new Set(generated)
+  const added = generated.filter((rel) => !currentSet.has(rel))
+  const stale = current.filter((rel) => !generatedSet.has(rel))
+  const extraFiles = stale.filter((rel) => promotedNames.has(rel.split('/')[0]))
+  const extraSkillDirs = [
+    ...new Set(stale.filter((rel) => !promotedNames.has(rel.split('/')[0])).map((rel) => rel.split('/')[0])),
+  ].sort()
+  const changed = []
+  for (const rel of generated) {
+    if (!currentSet.has(rel)) continue
+    const before = await readText(path.join(currentDir, rel))
+    const after = await readText(path.join(generatedDir, rel))
+    if (before === after) continue
+    changed.push({ path: rel, hunks: diffLines(before, after) })
+  }
+  return { added, extraFiles, extraSkillDirs, changed }
 }
 
 async function main() {
-  const cacheDir = path.resolve(arg('--cache', path.join(REPO_ROOT, '.upstream-cache')))
-  const outDir = path.resolve(arg('--out', path.join(REPO_ROOT, 'skills')))
-  const oursDir = path.resolve(arg('--ours', outDir))
-  const reportPath = path.resolve(arg('--report', path.join(REPO_ROOT, '.sync-conflicts.md')))
-  const target = arg('--to', 'HEAD')
-  const eolMode = arg('--eol', 'lf')
-  const defaultEol = eolMode === 'lf' ? '\n' : eolMode === 'crlf' ? '\r\n' : await detectDefaultEol(oursDir)
-  const prune = flag('--prune')
-  const keepConflicts = flag('--keep-conflicts')
+  const check = flag('--check')
   const dryRun = flag('--dry-run')
+  const prune = flag('--prune')
+  const eol = arg('--eol', 'lf') === 'crlf' ? '\r\n' : '\n'
+  const outDir = path.resolve(arg('--out', path.join(REPO_ROOT, 'skills')))
+  const cacheDir = path.resolve(arg('--cache', path.join(REPO_ROOT, '.upstream-cache')))
+  const statePath = path.join(REPO_ROOT, STATE_FILE)
+  const state = fs.existsSync(statePath) ? JSON.parse(await readText(statePath)) : {}
+  const requested = arg('--to', check ? state.baseCommit : 'HEAD')
+  if (requested === undefined) {
+    throw new Error(`no upstream commit: pass --to or record baseCommit in ${STATE_FILE}`)
+  }
 
-  // 1. Upstream cache: a bare-ish working repo we can add worktrees to.
-  //    `init` + shallow `fetch` is used instead of `clone` because partial
-  //    clone / filter negotiation is more fragile over flaky links.
+  // Upstream cache: a working repo we can add a worktree to. `init` + shallow
+  // `fetch` is used instead of `clone` because partial clone / filter
+  // negotiation is more fragile over flaky links.
   if (!fs.existsSync(path.join(cacheDir, '.git'))) {
     console.log(`initializing upstream cache at ${cacheDir}`)
     await fsp.mkdir(cacheDir, { recursive: true })
@@ -282,132 +319,92 @@ async function main() {
     throw new Error(`unable to fetch ${ref} from ${UPSTREAM_URL}`)
   }
 
-  // 2. Resolve commits: baseline from state file (or flag), target as given
-  const statePath = path.join(REPO_ROOT, STATE_FILE)
-  const state = fs.existsSync(statePath) ? JSON.parse(await readText(statePath)) : {}
-  const baseline = arg('--baseline', state.baseCommit)
-  if (baseline === undefined) throw new Error(`no baseline: pass --baseline or record baseCommit in ${STATE_FILE}`)
-  await ensureRef(baseline)
-  await ensureRef(target)
-  const baseSha = resolveRef(baseline)
-  const targetSha = resolveRef(target)
-  console.log(`baseline ${baseSha.slice(0, 8)} -> target ${targetSha.slice(0, 8)}`)
+  await ensureRef(requested)
+  const target = resolveRef(requested)
+  const label = path.relative(REPO_ROOT, outDir).split(path.sep).join('/') || '.'
+  console.log(`upstream ${target.slice(0, 8)} -> ${label}`)
 
-  // 3. Export both revisions as worktrees
   const workRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'mattpocock-sync-'))
-  const worktrees = {}
-  for (const [label, sha] of [['base', baseSha], ['theirs', targetSha]]) {
-    const dir = path.join(workRoot, label)
-    run('git', ['-C', cacheDir, 'worktree', 'add', '--detach', dir, sha])
-    worktrees[label] = dir
-  }
-
+  const upstreamDir = path.join(workRoot, 'upstream')
+  run('git', ['-C', cacheDir, 'worktree', 'add', '--detach', upstreamDir, target])
   try {
-    const baseSkills = path.join(worktrees.base, 'skills')
-    const theirsSkills = path.join(worktrees.theirs, 'skills')
-    const manifest = JSON.parse(await readText(path.join(worktrees.theirs, MANIFEST)))
+    const manifest = JSON.parse(await readText(path.join(upstreamDir, MANIFEST)))
     const promoted = manifest.skills.map((entry) => entry.replace(/^\.\/skills\//, ''))
-    const basePromoted = JSON.parse(await readText(path.join(worktrees.base, MANIFEST)))
-      .skills.map((entry) => entry.replace(/^\.\/skills\//, ''))
+    const promotedNames = new Set(promoted.map((entry) => path.posix.basename(entry)))
 
-    const tmpDir = await fsp.mkdtemp(path.join(workRoot, 'merge-'))
-    const report = []
-    const summary = { skills: 0, newSkills: [], removedSkills: [], files: 0, merged: 0, conflictedFiles: 0, conflictBlocks: 0, rules: new Set(), unchanged: 0 }
-
+    // Generate the whole pack from upstream, then compare: the pack must be
+    // exactly what the rules produce, with nothing added or left behind.
+    const generatedDir = path.join(workRoot, 'generated')
+    const fired = new Set()
+    let files = 0
     for (const entry of promoted) {
       const name = path.posix.basename(entry)
-      summary.skills++
-      if (!basePromoted.includes(entry)) summary.newSkills.push(name)
-      const oursSkill = path.join(oursDir, name)
-      const theirsSkill = path.join(theirsSkills, entry)
-      const baseSkill = path.join(baseSkills, entry)
-
-      for (const rel of await listFiles(theirsSkill)) {
+      for (const rel of await listFiles(path.join(upstreamDir, 'skills', entry))) {
         if (EXCLUDED_FILES.has(rel)) continue
-        const theirsText = await readText(path.join(theirsSkill, rel))
-        const oursPath = path.join(oursSkill, rel)
-        const basePath = path.join(baseSkill, rel)
-        const oursRaw = fs.existsSync(oursPath) ? await readRaw(oursPath) : undefined
-        const oursEol = oursRaw === undefined ? undefined : detectEol(oursRaw)
-        const ours = oursRaw === undefined ? undefined : normalize(oursRaw)
-        let text
-        let conflicted = false
-
-        if (ours !== undefined && fs.existsSync(basePath)) {
-          const base = await readText(basePath)
-          if (ours === theirsText) {
-            text = ours
-          } else if (base === theirsText) {
-            text = ours // upstream untouched: keep the local adaptation
-          } else {
-            const merged = merge3(ours, base, theirsText, tmpDir, `${name}_${rel}`)
-            text = merged.text
-            if (merged.conflicts > 0) {
-              conflicted = true
-              if (!keepConflicts) {
-                const { blocks, resolved } = describeConflicts(text)
-                summary.conflictBlocks += blocks.length
-                report.push({ skill: name, file: rel, blocks })
-                text = resolved
-              }
-            }
-            summary.merged++
-          }
-        } else {
-          text = theirsText // new file or new skill: adapt from scratch
-        }
-
-        const { text: adapted, fired } = adapt(text)
-        for (const rule of fired) summary.rules.add(rule)
-        if (conflicted) summary.conflictedFiles++
-        if (!dryRun) await writeText(path.join(outDir, name, rel), adapted, oursEol ?? defaultEol)
-        summary.files++
-        if (adapted === theirsText && oursRaw !== undefined) summary.unchanged++
+        const { text, fired: rules } = adapt(await readText(path.join(upstreamDir, 'skills', entry, rel)))
+        for (const rule of rules) fired.add(rule)
+        await writeText(path.join(generatedDir, name, rel), text, eol)
+        files++
       }
     }
+    const staleRules = ADAPT_RULES.map((rule) => rule.name).filter((name) => !fired.has(name))
+    const diff = await compareTrees(outDir, generatedDir, promotedNames)
+    const drift = diff.changed.length + diff.added.length + diff.extraFiles.length + diff.extraSkillDirs.length
 
-    // Skills upstream dropped (kept locally unless --prune)
-    for (const entry of basePromoted) {
-      if (promoted.includes(entry)) continue
-      const name = path.posix.basename(entry)
-      summary.removedSkills.push(name)
-      if (prune && !dryRun) await fsp.rm(path.join(outDir, name), { recursive: true, force: true })
+    if (drift === 0) {
+      console.log(`clean: all ${files} files in ${promoted.length} skills reproduce ${label}`)
+    } else {
+      console.log(`drift: ${drift} file(s) in ${label} differ from upstream ${target.slice(0, 8)} + the rules`)
+      for (const item of diff.changed) {
+        console.log(`  changed  ${item.path}`)
+        for (const hunk of item.hunks) {
+          console.log(`    L${hunk.line} pack     | ${hunk.pack ?? '<missing>'}`)
+          console.log(`    L${hunk.line} expected | ${hunk.expected ?? '<missing>'}`)
+        }
+      }
+      for (const rel of diff.added) console.log(`  missing  ${rel}`)
+      for (const rel of diff.extraFiles) console.log(`  extra    ${rel}`)
+      for (const name of diff.extraSkillDirs) console.log(`  extra skill dir  ${name}/`)
+    }
+    if (staleRules.length > 0) {
+      console.log(`stale rules (never fired on upstream ${target.slice(0, 8)}): ${staleRules.join(', ')}`)
     }
 
-    // 4. State + report
-    if (!dryRun) {
-      await writeText(statePath, `${JSON.stringify({ upstream: UPSTREAM_URL, baseCommit: targetSha, syncedAt: new Date().toISOString() }, null, 2)}\n`)
-      if (report.length > 0) {
-        const lines = ['# Sync conflict report', '', `Upstream \`${baseSha.slice(0, 8)}\` -> \`${targetSha.slice(0, 8)}\`.`, '', 'Conflict blocks were resolved by taking upstream\'s side and re-applying the dsh adaptation rules. Verify each block below.', '']
-        for (const item of report) {
-          lines.push(`## ${item.skill} / ${item.file}`, '')
-          item.blocks.forEach((block, index) => {
-            lines.push(`### block ${index + 1}`, '', 'local adaptation (ours):', '', '```', block.ours, '```', '', 'upstream (theirs):', '', '```', block.theirs, '```', '')
-          })
-        }
-        await writeText(reportPath, lines.join('\n'))
+    if (check) {
+      if (drift > 0 || staleRules.length > 0) {
+        console.error(`check failed: ${label} is not reproducible from upstream ${target.slice(0, 8)}`)
+        process.exitCode = 1
+      } else {
+        console.log(`ok — all ${files} files reproducible from upstream ${target.slice(0, 8)}, ${ADAPT_RULES.length} rules live (0 stale)`)
+      }
+      return
+    }
+    if (dryRun) {
+      console.log('dry run: nothing written')
+      return
+    }
+
+    // Apply: the generated tree is authoritative, so stale files inside a
+    // promoted skill always go; a whole extra skill directory needs --prune.
+    for (const rel of diff.extraFiles) await fsp.rm(path.join(outDir, rel), { force: true })
+    if (diff.extraSkillDirs.length > 0) {
+      if (prune) {
+        for (const name of diff.extraSkillDirs) await fsp.rm(path.join(outDir, name), { recursive: true, force: true })
+      } else {
+        console.log(`kept (pass --prune to remove): ${diff.extraSkillDirs.join(', ')}`)
       }
     }
+    for (const rel of [...diff.added, ...diff.changed.map((item) => item.path)]) {
+      await writeText(path.join(outDir, rel), await readText(path.join(generatedDir, rel)), eol)
+    }
+    await writeText(statePath, `${JSON.stringify({ upstream: UPSTREAM_URL, baseCommit: target, syncedAt: new Date().toISOString() }, null, 2)}\n`)
 
-    console.log(JSON.stringify({
-      skills: summary.skills,
-      files: summary.files,
-      threeWayMerged: summary.merged,
-      conflictedFiles: summary.conflictedFiles,
-      conflictBlocks: summary.conflictBlocks,
-      newSkills: summary.newSkills,
-      removedUpstream: summary.removedSkills,
-      adaptedRulesFired: [...summary.rules],
-      dryRun,
-      report: report.length > 0 ? path.relative(REPO_ROOT, reportPath) : null,
-    }, null, 2))
-    if (!dryRun) {
-      console.log(`\nnext: git tag sync/${targetSha.slice(0, 8)} && git push --tags   # record this sync point`)
+    console.log(`synced: ${diff.changed.length} updated, ${diff.added.length} added, ${diff.extraFiles.length} removed, ${diff.extraSkillDirs.length} skill dir(s) ${prune ? 'pruned' : 'extra'}`)
+    if (state.baseCommit !== target) {
+      console.log(`next: git tag -a sync/${target.slice(0, 8)} -m "generated from mattpocock/skills ${target}" && git push --tags`)
     }
   } finally {
-    for (const dir of Object.values(worktrees)) {
-      run('git', ['-C', cacheDir, 'worktree', 'remove', '--force', dir], { allowFailure: true })
-    }
+    run('git', ['-C', cacheDir, 'worktree', 'remove', '--force', upstreamDir], { allowFailure: true })
     await fsp.rm(workRoot, { recursive: true, force: true })
   }
 }
