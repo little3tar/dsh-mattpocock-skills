@@ -36,7 +36,7 @@ After installing either way, tell the user: new sessions pick the skills up auto
 - `cordis.patch.yml` + `package.json` — the dsh bundle: it mounts a second instance of the built-in filesystem skill provider over `skills/` as a *custom* root (rank 300). This package ships no plugin code of its own.
 - `scripts/install.sh`, `scripts/install.ps1` — directory-drop installers
 - `scripts/verify-skills.mjs` — frontmatter contract and adaptation checks; run before committing
-- `scripts/sync-upstream.mjs` — re-sync from upstream (three-way merge + adaptation rules); see PROVENANCE.md
+- `scripts/sync-upstream.mjs` — regenerate `skills/` from upstream (upstream + adaptation rules, no merge), or `--check` the pack against its pin; see PROVENANCE.md
 - `scripts/sync-upstream.test.mjs` — unit tests for those rules (`npm test`); extend them whenever you add or change a rule
 - `PROVENANCE.md` — pinned upstream commit and the adaptation rules; read it before editing skill bodies
 - `README.md` / `README.zh-CN.md` — install and usage documentation
@@ -48,12 +48,16 @@ After installing either way, tell the user: new sessions pick the skills up auto
 - Subagents are spawned with the `subagent` tool; parallel means several calls in one message, background means `run_in_background: true`.
 - `/compact` is a real dsh command; there is no `/clear` — write "start a new session" instead.
 - Keep all 27 skill names identical to upstream (shadowing and re-sync depend on it). Run `npm test` and `node scripts/verify-skills.mjs` before committing.
+- A deliberate change to a skill body belongs in the adaptation-rule table in `scripts/sync-upstream.mjs` (with a unit test and a PROVENANCE entry): `skills/` is regenerated from upstream, so a hand edit there is overwritten by the next sync.
 
 ## Re-syncing from upstream
 
 ```sh
-node scripts/sync-upstream.mjs --ours skills --out skills --to HEAD
-node scripts/verify-skills.mjs
+node scripts/sync-upstream.mjs --to HEAD    # regenerate skills/ from upstream
+node scripts/verify-skills.mjs              # frontmatter contract + adaptation leftovers
+npm test                                    # the rules are data; this pins their behaviour
+npm run check:reproducible                  # skills/ is exactly upstream + rules, no stale rule
+git diff --stat                             # review; a pure re-sync shows only what upstream changed
 ```
 
-The script shallow-fetches the pinned commit (recorded in `.upstream.json`) and the target, three-way merges every promoted skill, re-applies the adaptation rules encoded in the script, and writes `.sync-conflicts.md` listing every block it resolved by taking upstream's side. Review that report, then verify. `--prune` also removes skills upstream dropped; without it they are kept and reported.
+`skills/` is a pure function of upstream: the script reads every promoted skill at the target commit, re-applies the adaptation rules, and writes it out — there is no merge base, so a sync cannot conflict. `--check` re-derives the pack from the pinned commit in `.upstream.json` and fails on any drift, missing or extra file or skill, or rule that no longer fires (upstream rewording is the usual cause). `--dry-run` reports without writing; `--prune` also drops skills upstream removed — without it they are kept and listed.

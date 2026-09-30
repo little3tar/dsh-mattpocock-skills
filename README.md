@@ -104,16 +104,25 @@ node scripts/verify-skills.mjs   # frontmatter contract + adaptation checks
 ## Syncing from upstream
 
 ```sh
-node scripts/sync-upstream.mjs --ours skills --out skills --baseline <sha> --to <sha|HEAD>
+node scripts/sync-upstream.mjs --to <sha|HEAD>   # regenerate skills/ from upstream
+npm run check:reproducible                       # verify the pack is reproducible
 ```
 
-The script shallow-fetches both upstream commits, three-way merges every promoted
-skill (`ours` = this pack, `base` = the pinned commit, `theirs` = the target),
-re-applies the adaptation rules, and writes `.sync-conflicts.md` listing every
-block it resolved by taking upstream's side. Review that file, then run
-`verify-skills.mjs`. `--prune` also removes skills upstream dropped. The rules
-themselves live in the script; [PROVENANCE.md](PROVENANCE.md) explains why each
-one exists.
+The pack is a pure function of upstream: every promoted skill file is read from
+the target commit, passed through the adaptation rules, and written out. There is
+no merge base and no three-way merge, so a sync cannot conflict. Two gates keep it
+honest:
+
+- `node scripts/verify-skills.mjs` — the dsh frontmatter contract, plus Claude
+  Code artifacts the adaptation is supposed to have removed.
+- `node scripts/sync-upstream.mjs --check` — the committed `skills/` is exactly
+  what upstream at the pinned commit plus the rules produce, and every rule still
+  fires. It exits non-zero on any drift, missing or extra file or skill, or a rule
+  that upstream rewording has made stale.
+
+`--dry-run` prints that same report without writing; `--prune` also deletes skill
+directories upstream no longer promotes. The rules themselves live in the script;
+[PROVENANCE.md](PROVENANCE.md) explains why each one exists.
 
 ## License
 

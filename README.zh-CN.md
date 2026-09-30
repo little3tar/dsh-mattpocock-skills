@@ -104,10 +104,19 @@ node scripts/verify-skills.mjs   # 校验 frontmatter 契约与适配状态
 ## 从上游同步
 
 ```sh
-node scripts/sync-upstream.mjs --ours skills --out skills --baseline <sha> --to <sha|HEAD>
+node scripts/sync-upstream.mjs --to <sha|HEAD>   # 按上游重新生成 skills/
+npm run check:reproducible                       # 校验技能包可复现
 ```
 
-脚本会浅拉取上游两个提交，对每个 promoted 技能做三路合并（`ours` = 本技能包，`base` = 固定提交，`theirs` = 目标提交），重新套用适配规则，并把每个"取上游一侧"解决的冲突块写进 `.sync-conflicts.md`。审阅该文件后运行 `verify-skills.mjs`。加 `--prune` 会一并删除上游已移除的技能。适配规则本身写在脚本里，每条规则的由来见 [PROVENANCE.md](PROVENANCE.md)。
+技能包是上游的纯函数：每个 promoted 技能文件都从目标提交读出、套用脚本里的适配规则后写出。没有 merge base，
+也没有三路合并，所以同步不会产生冲突。两道门禁保证它不跑偏：
+
+- `node scripts/verify-skills.mjs` —— dsh frontmatter 契约，以及适配本应清掉的 Claude Code 残留。
+- `node scripts/sync-upstream.mjs --check` —— 已提交的 `skills/` 恰等于"上游固定提交 + 规则"的产物，且每条规则
+  仍然命中；任何内容漂移、文件或技能缺多、或上游改写导致的失效规则，都以非 0 退出。
+
+`--dry-run` 只打印同一份报告不写盘；`--prune` 会一并删除上游已不再 promoted 的技能目录。规则本身写在脚本里，
+每条规则的由来见 [PROVENANCE.md](PROVENANCE.md)。
 
 ## 许可证
 
