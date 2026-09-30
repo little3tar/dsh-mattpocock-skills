@@ -1,0 +1,10 @@
+# Bundle layer for dsh-mattpocock-skills.
+#
+# Mounts this package's own plugin, which registers a skill provider over the
+# packaged skills/ directory (import.meta.url-relative, so it resolves wherever
+# the package is installed — the profile composition's baseUrl points at the
+# profile directory, not at this package, which is why the skills ride behind
+# plugin code instead of a skill-filesystem customSkillDirs row).
+- insert:
+    - id: mattpocock-skills
+      name: dsh-mattpocock-skills

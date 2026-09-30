@@ -1,0 +1,5 @@
+# Upstream (mattpocock/skills) stores every skill body as LF, and so does this
+# pack. Pinning eol here keeps that true in the working tree too, so a Windows
+# core.autocrlf=true cannot reintroduce CRLF and make the pack drift from
+# upstream or from what `npm pack` would ship.
+* text=auto eol=lf
