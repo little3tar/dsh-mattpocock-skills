@@ -28,7 +28,7 @@ That is a pnpm install into the profile plus layer activation; verify with `dsh 
 
 > **Not published to npm.** Install from git as shown above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package — do not use it.
 
-The bundle carries its skills inside the package (a plugin registers them at rank 400), so nothing else is needed.
+The bundle carries its skills inside the package (mounted as a custom skill root at rank 300), so nothing else is needed.
 
 ### Option 2 — drop into a skill root (no bundle, every profile)
 
@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
 Flags: `--user-agents` (install to `~/.agents/skills` instead — shared with other Agent-Skills harnesses), `--project <dir>` (this project only, `<dir>/.dsh/skills`), `--uninstall`, `--list`. New sessions pick the skills up immediately — dsh watches its skill roots.
 
-Rank 400 (`~/.dsh/skills`) shadows an older copy of the same names in `~/.agents/skills` (rank 500), so this pack wins over any pre-existing upstream install. Use one channel; if you install both, the bundle and the directory copy will tie within the same layer.
+Because the bundle mounts at **rank 300** (a custom skill root) while the user roots are 400/500, a bundle install outranks any directory copy of the same names in `~/.dsh/skills` or `~/.agents/skills`, and project-level roots (100/200) still override both. Installing one channel is still the tidy choice, but unlike the original pack the two no longer tie: the bundle wins.
 
 ### Option 3 — just ask your agent
 

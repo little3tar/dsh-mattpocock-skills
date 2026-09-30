@@ -28,7 +28,7 @@ npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpococ
 
 > **本包未发布到 npm。** 请按上面的 git 形式安装。裸包名 `dsh-mattpocock-skills` 指向 npm 上另一个无关的包，不要用它。
 
-技能随包携带（由插件以 rank 400 注册），无需其他配置。
+技能随包携带（以 custom skill root 的形式挂在 rank 300），无需其他配置。
 
 ### 方式 2 —— 投递到技能根目录（不经 bundle，全部 profile 生效）
 
@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
 参数：`--user-agents`（改装到 `~/.agents/skills`，与其他 Agent-Skills harness 共享）、`--project <目录>`（仅该项目，`<目录>/.dsh/skills`）、`--uninstall`、`--list`。新会话即时生效——dsh 监听技能根目录。
 
-rank 400（`~/.dsh/skills`）会遮蔽 `~/.agents/skills`（rank 500）里的同名旧版，所以本适配包优先于任何已装的原版。两种方式选其一；若同时安装，bundle 与目录副本会在同层内打平。
+由于 bundle 挂在 **rank 300**（custom skill root），而用户级根是 400/500，装 bundle 会压过 `~/.dsh/skills` 与 `~/.agents/skills` 中的同名目录副本；项目级根（100/200）仍可覆盖两者。仍建议只用一个通道，但与原始包不同，两者并存不再打平——bundle 胜出。
 
 ### 方式 3 —— 直接对你的 agent 说
 

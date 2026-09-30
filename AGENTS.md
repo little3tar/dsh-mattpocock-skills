@@ -28,12 +28,12 @@ If this clone is the user's own checkout, install from the local path: `dsh plug
 
 After installing either way, tell the user: new sessions pick the skills up automatically; to start, run `/setup-matt-pocock-skills` once in the target repo, then `/ask-matt`.
 
-**Use one channel, not both.** The bundle registers its skill provider at rank 400, which ties with the user-level `~/.dsh/skills` root (also 400); a tie is broken by provider registration order, so which copy wins is an implementation detail. Installing the bundle and dropping the same skills into `~/.dsh/skills` leaves every shared name decided by that tie.
+**Ranks.** The bundle mounts the built-in filesystem provider over `skills/` as a *custom* root (rank 300), so it outranks the user-level roots (`~/.dsh/skills` 400, `~/.agents/skills` 500) and yields to project roots (100/200). No other layer uses 300, so a bundle install never ties with a directory copy of the same names — installing both is redundant rather than ambiguous.
 
 ## Repository layout
 
 - `skills/` — the 27 adapted skills (`<name>/SKILL.md`, dsh format)
-- `src/index.js` + `cordis.patch.yml` + `package.json` — the dsh bundle (registers a rank-400 skill provider over `skills/`)
+- `cordis.patch.yml` + `package.json` — the dsh bundle: it mounts a second instance of the built-in filesystem skill provider over `skills/` as a *custom* root (rank 300). This package ships no plugin code of its own.
 - `scripts/install.sh`, `scripts/install.ps1` — directory-drop installers
 - `scripts/verify-skills.mjs` — frontmatter contract and adaptation checks; run before committing
 - `scripts/sync-upstream.mjs` — re-sync from upstream (three-way merge + adaptation rules); see PROVENANCE.md

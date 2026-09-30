@@ -3,10 +3,8 @@
   "version": "0.2.0",
   "description": "Matt Pocock's engineering skills (grilling, spec/ticket flows, TDD, code review, domain modelling), adapted for DeepSeek Harness (dsh). Synced to upstream d81f3a1 — 27 skills.",
   "type": "module",
-  "main": "src/index.js",
   "files": [
     "skills/",
-    "src/",
     "cordis.patch.yml",
     "scripts/install.sh",
     "scripts/install.ps1",
