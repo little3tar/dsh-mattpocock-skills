@@ -32,9 +32,9 @@ test('model-side skill calls: quoted, backticked, twice, for', () => {
   )
 })
 
-test('subagent spelling, tool naming, and the parallel hyphen', () => {
+test('subagent spelling and tool naming', () => {
   applies('Spawn 3+ sub-agents in parallel.', 'Spawn 3+ subagents in parallel.')
-  applies('use this parallel sub-agent pattern.', 'use this parallel-subagent pattern.')
+  applies('use this parallel sub-agent pattern.', 'use this parallel subagent pattern.')
   applies(
     "Then spawn a sub-agent to walk the codebase. Don't follow rigid heuristics;",
     "Then spawn a subagent (the `subagent` tool) to walk the codebase. Don't follow rigid heuristics;",
@@ -70,6 +70,12 @@ test('/clear has no dsh counterpart', () => {
 
 test('model-side references lose the slash', () => {
   applies('straight from the `/codebase-design` skill', 'straight from the `codebase-design` skill')
+})
+
+test("ask-matt's command catalogue keeps its slashes", () => {
+  const line = '- **`/domain-modeling`**: sharpen the domain language.'
+  applies(line, '- **`domain-modeling`**: sharpen the domain language.')
+  assert.equal(adapt(line, 'ask-matt/SKILL.md').text, line)
 })
 
 test('frontmatter dsh cannot parse is dropped', () => {

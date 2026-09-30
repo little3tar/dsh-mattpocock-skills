@@ -106,10 +106,13 @@ const ADAPT_RULES = [
     replace: '| **New session** | Start from an empty context window.',
   },
   // Model-side skill references lose the slash; user-typed commands keep it.
+  // ask-matt is the exception: its body is a catalogue of the commands the
+  // *user* types, and it writes every entry that way, so its slashes stay.
   {
     name: 'de-slash model-side skill reference',
     pattern: /`\/(codebase-design|grilling|domain-modeling)`/g,
     replace: '`$1`',
+    skipFiles: ['ask-matt/SKILL.md'],
   },
   // Name the subagent tool where a body dispatches one.
   {
@@ -136,11 +139,6 @@ const ADAPT_RULES = [
     name: 'background agent -> background subagent',
     pattern: /\*\*background agent\*\*/g,
     replace: '**background subagent** (the `subagent` tool with `run_in_background: true`)',
-  },
-  {
-    name: 'parallel subagent -> parallel-subagent',
-    pattern: /parallel subagent pattern/g,
-    replace: 'parallel-subagent pattern',
   },
   // dsh runs the two review subagents concurrently only when issued in one message.
   {
@@ -211,11 +209,16 @@ async function writeText(file, text, eol = '\n') {
   await fsp.writeFile(file, eol === '\n' ? text : text.replace(/\n/g, eol), 'utf8')
 }
 
-/** Apply the dsh adaptation rules; returns the text and the rules that fired. */
-export function adapt(text) {
+/**
+ * Apply the dsh adaptation rules; returns the text and the rules that fired.
+ * `file` is the repo-relative path (`<skill>/<file>`), so a rule can exempt a
+ * file whose text is not model-facing (see the de-slash rule).
+ */
+export function adapt(text, file = '') {
   const fired = new Set()
   let out = text
   for (const rule of ADAPT_RULES) {
+    if (rule.skipFiles?.includes(file)) continue
     const before = out
     out = out.replace(rule.pattern, rule.replace)
     if (out !== before) fired.add(rule.name)
@@ -341,7 +344,7 @@ async function main() {
       const name = path.posix.basename(entry)
       for (const rel of await listFiles(path.join(upstreamDir, 'skills', entry))) {
         if (EXCLUDED_FILES.has(rel)) continue
-        const { text, fired: rules } = adapt(await readText(path.join(upstreamDir, 'skills', entry, rel)))
+        const { text, fired: rules } = adapt(await readText(path.join(upstreamDir, 'skills', entry, rel)), `${name}/${rel}`)
         for (const rule of rules) fired.add(rule)
         await writeText(path.join(generatedDir, name, rel), text, eol)
         files++

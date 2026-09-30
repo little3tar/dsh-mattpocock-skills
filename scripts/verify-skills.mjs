@@ -21,7 +21,12 @@ const LEFTOVERS = [
   { label: 'hyphenated "sub-agent" spelling', pattern: /sub-agents?/ },
   { label: '`argument-hint` frontmatter (Codex adapter field)', pattern: /^argument-hint:/m },
   { label: '`/clear` command (no dsh counterpart)', pattern: /`\/clear`/ },
-  { label: 'slash-prefixed model-side skill reference', pattern: /`\/(codebase-design|grilling|domain-modeling)`/ },
+  // ask-matt is a catalogue of the commands the *user* types, so its slashes stay.
+  {
+    label: 'slash-prefixed model-side skill reference',
+    pattern: /`\/(codebase-design|grilling|domain-modeling)`/,
+    skipFiles: ['ask-matt/SKILL.md'],
+  },
   { label: 'model-facing slash instruction (use the `skill` tool)', pattern: /[Uu]se \/(tdd|code-review)\b/ },
   { label: 'unnormalised "background agent" (use "background subagent")', pattern: /\*\*background agent\*\*/ },
   { label: 'harness-swap example still names Claude/Codex', pattern: /Claude → Codex/ },
@@ -97,6 +102,7 @@ async function main() {
       if (FORBIDDEN_PATHS.includes(rel)) problems.push(`${name}/${rel}: harness-specific file must not ship`)
       const text = normalize(await fsp.readFile(path.join(dir, rel), 'utf8'))
       for (const check of LEFTOVERS) {
+        if (check.skipFiles?.includes(`${name}/${rel}`)) continue
         const line = text.split('\n').findIndex((candidate) => check.pattern.test(candidate))
         if (line !== -1) problems.push(`${name}/${rel}:${line + 1}: ${check.label}`)
       }
