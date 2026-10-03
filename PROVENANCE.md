@@ -66,7 +66,7 @@ npm test                                         # the rules are data; this pins
 npm run check:reproducible                       # skills/ is exactly upstream + rules, no stale rule
 git diff --stat                                  # review what moved; a pure re-sync is empty
 git tag -a sync/<upstream short sha> -m "generated from mattpocock/skills <full sha>"
-git push --tags
+git push --follow-tags                           # --tags would push the upstream tags too
 ```
 
 The script shallow-fetches the target commit, reads every promoted skill in

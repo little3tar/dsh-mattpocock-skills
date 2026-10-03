@@ -412,7 +412,7 @@ async function main() {
 
     console.log(`synced: ${diff.changed.length} updated, ${diff.added.length} added, ${diff.extraFiles.length} removed, ${diff.extraSkillDirs.length} skill dir(s) ${prune ? 'pruned' : 'extra'}`)
     if (state.baseCommit !== target) {
-      console.log(`next: git tag -a sync/${target.slice(0, 8)} -m "generated from mattpocock/skills ${target}" && git push --tags`)
+      console.log(`next: git tag -a sync/${target.slice(0, 8)} -m "generated from mattpocock/skills ${target}" && git push origin sync/${target.slice(0, 8)}`)
     }
   } finally {
     run('git', ['-C', cacheDir, 'worktree', 'remove', '--force', upstreamDir], { allowFailure: true })
