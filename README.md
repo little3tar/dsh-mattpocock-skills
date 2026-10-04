@@ -26,7 +26,7 @@ npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpococ
 
 That is a pnpm install into the profile plus layer activation; verify with `dsh --profile web --dump-config` (a `# == dsh-mattpocock-skills` layer appears), then start a session on that profile.
 
-A bare `github:` spec resolves the repository's **default branch**, so a re-install can pick up newer commits. For a reproducible install, pin a release: `dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.0` (or a commit sha).
+A bare `github:` spec resolves the repository's **default branch**, so a re-install can pick up newer commits. For a reproducible install, pin a release: `dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.1` (or a commit sha).
 
 > **Not published to npm.** Install from git as shown above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package — do not use it.
 

@@ -3,9 +3,9 @@
 ## Upstream
 
 - Repository: https://github.com/mattpocock/skills
-- Pinned commit: `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` (2026-09-29)
+- Pinned commit: `24fe0ef7737efae15c87225755e9f6f5965e4888` (2026-10-04)
 - Lineage: `skills/` is a **pure function of that commit** — `adapt(upstream @ pin)`, nothing else. Version 0.1.x came second-hand, via [`MynameisKcy/dsh-mattpocock-skills`](https://github.com/MynameisKcy/dsh-mattpocock-skills) 0.1.1 (which adapted upstream `9c9f36cc`, 2026-08-17); that repository is a historical source only and is not an input to any sync.
-- Upstream version: v1.2.3 in `.claude-plugin/plugin.json` — upstream ships substantive skill changes without bumping that version, so the **commit**, not the version, is the identity to track.
+- Upstream version: v1.3.1 in `.claude-plugin/plugin.json` — upstream ships substantive skill changes without bumping that version, so the **commit**, not the version, is the identity to track.
 - Scope: the 27 **promoted** skills — `skills/engineering/` (20) and `skills/productivity/` (7), as listed in upstream `.claude-plugin/plugin.json`. Buckets `misc/`, `in-progress/`, `deprecated/`, and `personal/` are intentionally not migrated. Since the 0.1.x adaptation (`9c9f36cc`), upstream added `implement-spec`, `pr`, and `retro`, and removed `resolving-merge-conflicts`.
 - License: MIT, Copyright (c) 2026 Matt Pocock. This repository is a derivative work for DeepSeek Harness (dsh); see [LICENSE](LICENSE).
 
@@ -28,7 +28,7 @@ The upstream skills target Claude Code. DeepSeek Harness (dsh) is format-compati
 
 | Skill | Changes |
 |---|---|
-| ask-matt | `/clear`ing → "starting a fresh session"; the "`/clear`" list option and the phase-boundary table row → "New session"; PHASE-BOUNDARIES.md §2 rewritten for a new session, harness example "Claude → Codex" → "Claude Code → dsh"; the "**background agent**" bullet under `/research` → named `subagent` tool; its command catalogue keeps upstream's slashes |
+| ask-matt | `/clear`ing → "starting a fresh session"; the "`/clear`" list option and the phase-boundary table row → "New session"; PHASE-BOUNDARIES.md §2 rewritten for a new session, harness example "Claude → Codex" → "Claude Code → dsh"; the "**background agent**" bullet under `/research` → named `subagent` tool; its command catalogue keeps upstream's slashes. The `/diagnosing-bugs` on-ramp follows upstream v1.3.1: the stale post-mortem hand-off to `/improve-codebase-architecture` is gone, replaced by "run `/retro` once the fix is in". The catalogue's slashes still stay — both entries are gestures the **user** types, and `retro` is user-invoked, so no model-side invocation is implied |
 | code-review | "sub-agent(s)" → "subagent(s)" throughout; §4 names the one-message concurrent dispatch of the two `subagent` calls |
 | codebase-design | SKILL.md: "parallel sub-agents" → "parallel subagents"; DESIGN-IT-TWICE.md: "parallel sub-agent(s)" → "subagent(s)", §2 names the `subagent` tool and the one-message parallel issue |
 | diagnosing-bugs | none (harness-neutral) |

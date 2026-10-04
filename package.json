@@ -1,7 +1,7 @@
 {
   "name": "dsh-mattpocock-skills",
-  "version": "0.3.0",
-  "description": "Matt Pocock's engineering skills (grilling, spec/ticket flows, TDD, code review, domain modelling), adapted for DeepSeek Harness (dsh). Synced to upstream d81f3a1 — 27 skills.",
+  "version": "0.3.1",
+  "description": "Matt Pocock's engineering skills (grilling, spec/ticket flows, TDD, code review, domain modelling), adapted for DeepSeek Harness (dsh). Synced to upstream 24fe0ef — 27 skills.",
   "type": "module",
   "files": [
     "skills/",

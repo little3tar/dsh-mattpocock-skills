@@ -14,7 +14,7 @@ The user's dsh version determines nothing about these steps — all channels wor
 
    This pack is **not published to npm**: always install it from git, as above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package.
 
-   A bare `github:` spec resolves the default branch, so a re-install can move. To pin a release: `dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills#v0.3.0` (or a commit sha).
+   A bare `github:` spec resolves the default branch, so a re-install can move. To pin a release: `dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills#v0.3.1` (or a commit sha).
 
    If `dsh` is not a global command, run the same through the CLI package: `npx -y @deepseek-ai/dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills` (first run downloads the CLI; or install it once with `npm install -g @deepseek-ai/dsh`).
 
