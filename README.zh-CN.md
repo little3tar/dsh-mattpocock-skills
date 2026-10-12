@@ -26,7 +26,7 @@ npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpococ
 
 这是向 profile 内做一次 pnpm 安装并激活配置层；用 `dsh --profile web --dump-config` 验证（会出现 `# == dsh-mattpocock-skills` 层），然后在该 profile 上开启会话。
 
-不带 ref 的 `github:` 写法解析的是仓库**默认分支**，重新安装可能拿到更新的提交。要可复现安装就钉住发布：`dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.2`（或写 commit sha）。
+不带 ref 的 `github:` 写法解析的是仓库**默认分支**，重新安装可能拿到更新的提交。要可复现安装就钉住发布：`dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.3`（或写 commit sha）。
 
 > **本包未发布到 npm。** 请按上面的 git 形式安装。裸包名 `dsh-mattpocock-skills` 指向 npm 上另一个无关的包，不要用它。
 
@@ -44,7 +44,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
 参数：`--user-agents`（改装到 `~/.agents/skills`，与其他 Agent-Skills harness 共享）、`--project <目录>`（仅该项目，`<目录>/.dsh/skills`）、`--uninstall`、`--list`。新会话即时生效——dsh 监听技能根目录。
 
-由于 bundle 挂在 **rank 300**（custom skill root），而用户级根是 400/500，装 bundle 会压过 `~/.dsh/skills` 与 `~/.agents/skills` 中的同名目录副本；项目级根（100/200）仍可覆盖两者。仍建议只用一个通道，但与原始包不同，两者并存不再打平——bundle 胜出。
+rank 只在**同一层内**生效，不跨层：bundle 挂在 **rank 300**（custom skill root），用户级根是 400/500，项目级根是 100/200，但技能注册表按作用域分层且**后层覆盖前层**，因此最近的作用域胜过全局层，与 rank 无关。仓库插件形态装在**全局层**，而 web profile 里由 preset 挂载自己的 filesystem provider（默认根开启），所以 `~/.dsh/skills` 中的同名技能**会压过本 bundle**，而不是相反。请只用一个通道：若装 bundle，先删掉同名目录副本，否则目录副本会一直悄悄胜出。
 
 ### 方式 3 —— 直接对你的 agent 说
 

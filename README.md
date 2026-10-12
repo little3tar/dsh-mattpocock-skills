@@ -26,7 +26,7 @@ npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpococ
 
 That is a pnpm install into the profile plus layer activation; verify with `dsh --profile web --dump-config` (a `# == dsh-mattpocock-skills` layer appears), then start a session on that profile.
 
-A bare `github:` spec resolves the repository's **default branch**, so a re-install can pick up newer commits. For a reproducible install, pin a release: `dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.2` (or a commit sha).
+A bare `github:` spec resolves the repository's **default branch**, so a re-install can pick up newer commits. For a reproducible install, pin a release: `dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.3` (or a commit sha).
 
 > **Not published to npm.** Install from git as shown above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package — do not use it.
 
@@ -44,7 +44,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install.ps1
 
 Flags: `--user-agents` (install to `~/.agents/skills` instead — shared with other Agent-Skills harnesses), `--project <dir>` (this project only, `<dir>/.dsh/skills`), `--uninstall`, `--list`. New sessions pick the skills up immediately — dsh watches its skill roots.
 
-Because the bundle mounts at **rank 300** (a custom skill root) while the user roots are 400/500, a bundle install outranks any directory copy of the same names in `~/.dsh/skills` or `~/.agents/skills`, and project-level roots (100/200) still override both. Installing one channel is still the tidy choice, but unlike the original pack the two no longer tie: the bundle wins.
+Rank works **within a layer**, not across them: the bundle mounts at **rank 300** (a custom skill root) against user roots 400/500 and project roots 100/200, but the skill registry is layered per scope and merges last-wins, so the nearest scope wins regardless of rank. A repository-plugin install registers into the **global** layer, while in the web profile a preset mounts its own filesystem provider with the user roots enabled — so a same-named skill in `~/.dsh/skills` **beats this bundle**, not the reverse. Pick one channel: if you install the bundle, remove any same-named directory copy first, otherwise the directory copy silently keeps winning.
 
 ### Option 3 — just ask your agent
 

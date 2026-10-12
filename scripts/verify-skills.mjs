@@ -24,11 +24,11 @@ const LEFTOVERS = [
   // ask-matt is a catalogue of the commands the *user* types, so its slashes stay.
   {
     label: 'slash-prefixed model-side skill reference',
-    pattern: /`\/(codebase-design|grilling|domain-modeling)`/,
+    pattern: /`\/(codebase-design|grilling|domain-modeling|grill-with-docs|improve-codebase-architecture)`/,
     skipFiles: ['ask-matt/SKILL.md'],
   },
   { label: 'model-facing slash instruction (use the `skill` tool)', pattern: /[Uu]se \/(tdd|code-review)\b/ },
-  { label: 'unnormalised "background agent" (use "background subagent")', pattern: /\*\*background agent\*\*/ },
+  { label: 'unnormalised "background agent" (use "background subagent")', pattern: /background agent/ },
   { label: 'harness-swap example still names Claude/Codex', pattern: /Claude → Codex/ },
 ]
 /** Paths inside a skill that belong to another harness. */

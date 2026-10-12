@@ -57,9 +57,7 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 ### 4. Spawn both subagents in parallel
 
-Issue both subagent calls together, in the foreground, and aggregate the reports they return.
-
-Issue the two `subagent` tool calls in one message so they run concurrently.
+Issue the two `subagent` tool calls in one message so they run concurrently, then aggregate the reports they return.
 
 **Standards subagent prompt** — include:
 

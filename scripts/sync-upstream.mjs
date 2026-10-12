@@ -105,7 +105,10 @@ const ADAPT_RULES = [
   // *user* types, and it writes every entry that way, so its slashes stay.
   {
     name: 'de-slash model-side skill reference',
-    pattern: /`\/(codebase-design|grilling|domain-modeling)`/g,
+    // `grill-with-docs` and `improve-codebase-architecture` are here too: one
+    // sentence names all three siblings the same way, and de-slashing only the
+    // one that happened to be listed first left the notation mixed.
+    pattern: /`\/(codebase-design|grilling|domain-modeling|grill-with-docs|improve-codebase-architecture)`/g,
     replace: '`$1`',
     skipFiles: ['ask-matt/SKILL.md'],
   },
@@ -135,11 +138,27 @@ const ADAPT_RULES = [
     pattern: /\*\*background agent\*\*/g,
     replace: '**background subagent** (the `subagent` tool with `run_in_background: true`)',
   },
-  // dsh runs the two review subagents concurrently only when issued in one message.
   {
-    name: 'code-review: name the concurrent dispatch',
+    // The same idiom, un-bolded, in `research`'s description. Routing is keyed
+    // on the description text, so this is the narrowest phrase that removes the
+    // inconsistency without touching the trigger words around it.
+    name: 'background agent -> background subagent (research description)',
+    pattern: /delegated to a background agent\./g,
+    replace: 'delegated to a background subagent.',
+  },
+  // dsh's `subagent` tool backgrounds by default, so upstream's Claude Code
+  // "in the foreground" idiom describes an action dsh has no equivalent for.
+  // Replace the sentence outright rather than appending a second one: the
+  // dsh-accurate mechanism is the one-message dispatch.
+  {
+    name: 'code-review: one-message dispatch replaces the foreground idiom',
+    pattern: /Issue both subagent calls together, in the foreground, and aggregate the reports they return\./g,
+    replace: 'Issue the two `subagent` tool calls in one message so they run concurrently, then aggregate the reports they return.',
+  },
+  {
+    name: 'code-review: prompt-heading wording',
     pattern: /\*\*Standards subagent prompt\*\* should include:/g,
-    replace: 'Issue the two `subagent` tool calls in one message so they run concurrently.\n\n**Standards subagent prompt** — include:',
+    replace: '**Standards subagent prompt** — include:',
   },
   {
     name: 'code-review: Spec prompt wording',

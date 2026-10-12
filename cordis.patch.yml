@@ -5,12 +5,16 @@
 # provider keeps this package free of plugin code: there is no provider
 # implementation here to keep in step with dsh's API.
 #
-# Rank rationale (constants in @deepseek-ai/dsh-skill-filesystem): project roots
-# are 100/200, custom roots 300, user roots 400/500, bundled roots 600. A custom
-# root places this pack above every user-level directory (~/.dsh/skills 400,
-# ~/.agents/skills 500) and below project-level overrides (100/200) — and 300 is
-# used by no other layer, so the pack can never tie with another provider over
-# the same skill name.
+# Rank rationale (constants in @deepseek-ai/dsh-skill-filesystem): *within one
+# layer* project roots are 100/200, custom roots 300, user roots 400/500,
+# bundled roots 600, and lower wins. Rank decides nothing ACROSS layers: the
+# skill registry is host+per-scope layered and merges last-wins, so the nearest
+# scope beats this global-layer provider whatever its rank. In the web profile
+# a preset mounts its own filesystem provider with the user roots enabled, so a
+# same-named skill under ~/.dsh/skills (400) wins over this bundle (300):
+# installing the bundle does not shadow a directory copy — remove that copy, or
+# deploy by directory copy instead. 300 is also the shared custom rank (the
+# preset uses one too), so a tie falls to provider registration order.
 - insert:
     - id: mattpocock-skills-filesystem
       name: '@deepseek-ai/dsh-skill-filesystem'

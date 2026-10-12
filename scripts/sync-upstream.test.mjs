@@ -75,6 +75,11 @@ test('/clear has no dsh counterpart', () => {
 
 test('model-side references lose the slash', () => {
   applies('straight from the `/codebase-design` skill', 'straight from the `codebase-design` skill')
+  // One sentence names three siblings; all three lose the slash together.
+  applies(
+    'The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`)',
+    'The `domain-modeling` skill (reached via `grill-with-docs` and `improve-codebase-architecture`)',
+  )
 })
 
 test("ask-matt's command catalogue keeps its slashes", () => {
@@ -92,11 +97,14 @@ test('frontmatter: argument-hint is dropped, dsh-supported fields are kept', () 
   assert.equal(adapt(pr).text, pr)
 })
 
-test('code-review section 4 keeps the one-message dispatch note', () => {
+test('code-review section 4 states the dispatch in dsh terms', () => {
+  // dsh's `subagent` backgrounds by default, so upstream's "in the foreground"
+  // sentence is replaced, not annotated: one sentence, dsh's mechanism.
   applies(
-    '**Standards sub-agent prompt** should include:',
-    'Issue the two `subagent` tool calls in one message so they run concurrently.\n\n**Standards subagent prompt** — include:',
+    'Issue both sub-agent calls together, in the foreground, and aggregate the reports they return.',
+    'Issue the two `subagent` tool calls in one message so they run concurrently, then aggregate the reports they return.',
   )
+  applies('**Standards sub-agent prompt** should include:', '**Standards subagent prompt** — include:')
   applies('**Spec sub-agent prompt** should include:', '**Spec subagent prompt** — include:')
 })
 
@@ -124,9 +132,13 @@ test('background agent becomes the named subagent tool', () => {
     'Spin up a **background agent** to do the research, so you keep working while it reads.',
     'Spin up a **background subagent** (the `subagent` tool with `run_in_background: true`) to do the research, so you keep working while it reads.',
   )
-  // The un-bolded mention in research's description is a routing signal: untouched.
+  // The un-bolded mention in research's description is the same idiom, so it is
+  // normalised too; the trigger words around it stay put.
   const description = 'Use when the user wants a topic researched, or legwork delegated to a background agent.'
-  assert.equal(adapt(description).text, description)
+  assert.equal(
+    adapt(description).text,
+    'Use when the user wants a topic researched, or legwork delegated to a background subagent.',
+  )
 })
 
 test('implement names the `skill` tool through the generic Skill-tool rule', () => {

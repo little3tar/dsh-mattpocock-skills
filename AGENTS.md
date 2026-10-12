@@ -14,7 +14,7 @@ The user's dsh version determines nothing about these steps — all channels wor
 
    This pack is **not published to npm**: always install it from git, as above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package.
 
-   A bare `github:` spec resolves the default branch, so a re-install can move. To pin a release: `dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills#v0.3.2` (or a commit sha).
+   A bare `github:` spec resolves the default branch, so a re-install can move. To pin a release: `dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills#v0.3.3` (or a commit sha).
 
    If `dsh` is not a global command, run the same through the CLI package: `npx -y @deepseek-ai/dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills` (first run downloads the CLI; or install it once with `npm install -g @deepseek-ai/dsh`).
 
@@ -30,7 +30,7 @@ If this clone is the user's own checkout, install from the local path: `dsh plug
 
 After installing either way, tell the user: new sessions pick the skills up automatically; to start, run `/setup-matt-pocock-skills` once in the target repo, then `/ask-matt`.
 
-**Ranks.** The bundle mounts the built-in filesystem provider over `skills/` as a *custom* root (rank 300), so it outranks the user-level roots (`~/.dsh/skills` 400, `~/.agents/skills` 500) and yields to project roots (100/200). No other layer uses 300, so a bundle install never ties with a directory copy of the same names — installing both is redundant rather than ambiguous.
+**Ranks, and the layer caveat.** *Within one layer*, lower rank wins: project roots 100/200, a *custom* root 300 (what this bundle mounts), user roots 400/500, bundled 600. That order decides nothing **across** layers, though — the skill registry is host+per-scope layered and merges last-wins (`collectFresh` walks `[global, ...chainLayers(scope)]`, each layer overwriting the previous), so the **nearest scope beats the global layer whatever the rank**. Deployment-level providers such as a repository plugin register into the *global* layer; in the web profile the host `skill-filesystem` row is disabled and a preset mounts its own with default roots on, so `~/.dsh/skills` (400) is collected *in the preset layer* and **wins over this bundle's 300**. Practical consequence: installing the bundle does **not** shadow a same-named directory copy — remove that copy, or deploy one channel only. Rank 300 is also the shared custom rank (the preset uses one too), so a tie falls to provider registration order rather than never happening.
 
 ## Repository layout
 
