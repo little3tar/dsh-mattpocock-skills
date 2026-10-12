@@ -129,14 +129,16 @@ test('background agent becomes the named subagent tool', () => {
   assert.equal(adapt(description).text, description)
 })
 
-test('model-facing slash instructions become `skill` tool calls', () => {
+test('implement names the `skill` tool through the generic Skill-tool rule', () => {
+  // Upstream writes these as `Call the Skill tool with "x"` now, so the pair of
+  // implement-specific slash rules is gone and the generic rule carries them.
   applies(
-    'Use /tdd where possible, at pre-agreed seams.',
-    'Call the `skill` tool with name `tdd` and follow it where possible, at pre-agreed seams.',
+    'Call the Skill tool with "tdd" where possible, at pre-agreed seams.',
+    'Call the `skill` tool with name `tdd` where possible, at pre-agreed seams.',
   )
   applies(
-    'Once done, use /code-review to review the work.',
-    'Once done, call the `skill` tool with name `code-review` and review the work.',
+    'Once done, call the Skill tool with "code-review" to review the work.',
+    'Once done, call the `skill` tool with name `code-review` to review the work.',
   )
 })
 
@@ -171,7 +173,7 @@ test('rules are idempotent', () => {
     '| **`/clear`** | Empty the context window and start from nothing. |',
     '- swapping to a **new harness** (Claude → Codex),',
     'Spin up a **background agent** to do the research.',
-    'Use /tdd where possible, at pre-agreed seams.',
+    'Call the Skill tool with "tdd" where possible, at pre-agreed seams.',
     'Spawn 3+ subagents in parallel. Each must produce an interface.',
     'dispatch a subagent to find it',
     'naming which skills the next agent should call the `skill` tool for.',

@@ -151,17 +151,6 @@ const ADAPT_RULES = [
     pattern: /Spawn 3\+ subagents in parallel\. Each must/g,
     replace: 'Spawn 3+ subagents in parallel — one `subagent` tool call each, all issued in the same message. Each must',
   },
-  // Model-side slash instructions the bodies hand the agent.
-  {
-    name: 'implement: /tdd -> `skill` tool',
-    pattern: /Use \/tdd where possible, at pre-agreed seams\./g,
-    replace: 'Call the `skill` tool with name `tdd` and follow it where possible, at pre-agreed seams.',
-  },
-  {
-    name: 'implement: /code-review -> `skill` tool',
-    pattern: /Once done, use \/code-review to review the work\./g,
-    replace: 'Once done, call the `skill` tool with name `code-review` and review the work.',
-  },
   {
     name: 'handoff: suggested-skills wording',
     pattern: /naming which skills the next agent should call the `skill` tool for\./g,
