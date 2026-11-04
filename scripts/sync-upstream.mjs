@@ -115,8 +115,8 @@ const ADAPT_RULES = [
   // Name the subagent tool where a body dispatches one.
   {
     name: 'name the `subagent` tool (walk the codebase)',
-    pattern: /Then spawn a subagent to walk the codebase\./g,
-    replace: 'Then spawn a subagent (the `subagent` tool) to walk the codebase.',
+    pattern: /Then spawn a subagent with a fresh context window to walk the codebase\./g,
+    replace: 'Then spawn a subagent with a fresh context window (`subagent` tool) to walk the codebase.',
   },
   {
     name: 'name the `subagent` tool (resolved by)',
@@ -125,13 +125,21 @@ const ADAPT_RULES = [
   },
   {
     name: 'name the `subagent` tool (spin up)',
-    pattern: /spin up a subagent that calls/g,
-    replace: 'spin up a subagent (`subagent` tool) that calls',
+    pattern: /spin up a subagent with a fresh context window that calls/g,
+    replace: 'spin up a subagent with a fresh context window (`subagent` tool) that calls',
   },
   {
     name: 'name the `subagent` tool (grilling facts)',
-    pattern: /dispatch a subagent to find it/g,
-    replace: 'dispatch a subagent (the `subagent` tool) to find it',
+    pattern: /dispatch a subagent with a fresh context window to find it/g,
+    replace: 'dispatch a subagent with a fresh context window (the `subagent` tool) to find it',
+  },
+  {
+    // dsh ships two delegation tools: `subagent` starts a fresh context, and
+    // `subagent_fork` inherits this conversation. Upstream's "fresh context
+    // window" sentences leave that choice open, so name the right one.
+    name: 'fresh context window -> `subagent`, not `subagent_fork`',
+    pattern: /Start (every subagent|it) with a fresh context window\./g,
+    replace: 'Start $1 with a fresh context window (`subagent`, not `subagent_fork`, which inherits this conversation).',
   },
   {
     name: 'background agent -> background subagent',
@@ -167,8 +175,8 @@ const ADAPT_RULES = [
   },
   {
     name: 'codebase-design: name the one-message dispatch',
-    pattern: /Spawn 3\+ subagents in parallel\. Each must/g,
-    replace: 'Spawn 3+ subagents in parallel — one `subagent` tool call each, all issued in the same message. Each must',
+    pattern: /Spawn 3\+ subagents in parallel, each with a fresh context window\. Each must/g,
+    replace: 'Spawn 3+ subagents in parallel — one `subagent` tool call each, all issued in the same message, each starting with a fresh context window. Each must',
   },
   {
     name: 'handoff: suggested-skills wording',

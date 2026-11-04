@@ -41,16 +41,16 @@ test('subagent spelling and tool naming', () => {
   applies('Spawn 3+ sub-agents in parallel.', 'Spawn 3+ subagents in parallel.')
   applies('use this parallel sub-agent pattern.', 'use this parallel subagent pattern.')
   applies(
-    "Then spawn a sub-agent to walk the codebase. Don't follow rigid heuristics;",
-    "Then spawn a subagent (the `subagent` tool) to walk the codebase. Don't follow rigid heuristics;",
+    "Then spawn a sub-agent with a fresh context window to walk the codebase. Don't follow rigid heuristics;",
+    "Then spawn a subagent with a fresh context window (`subagent` tool) to walk the codebase. Don't follow rigid heuristics;",
   )
   applies(
     'Resolved by a subagent that calls the Skill tool with "research".',
     'Resolved by a subagent (`subagent` tool) that calls the `skill` tool with name `research`.',
   )
   applies(
-    'spin up a subagent that calls the Skill tool with "prototype"',
-    'spin up a subagent (`subagent` tool) that calls the `skill` tool with name `prototype`',
+    'spin up a subagent with a fresh context window that calls the Skill tool with "prototype"',
+    'spin up a subagent with a fresh context window (`subagent` tool) that calls the `skill` tool with name `prototype`',
   )
 })
 
@@ -156,15 +156,26 @@ test('implement names the `skill` tool through the generic Skill-tool rule', () 
 
 test('the parallel dispatch names the one-message issue', () => {
   applies(
-    'Spawn 3+ sub-agents in parallel. Each must produce a **radically different** interface.',
-    'Spawn 3+ subagents in parallel — one `subagent` tool call each, all issued in the same message. Each must produce a **radically different** interface.',
+    'Spawn 3+ sub-agents in parallel, each with a fresh context window. Each must produce a **radically different** interface.',
+    'Spawn 3+ subagents in parallel — one `subagent` tool call each, all issued in the same message, each starting with a fresh context window. Each must produce a **radically different** interface.',
   )
 })
 
 test('fact-finding dispatch names the subagent tool', () => {
   applies(
-    "dispatch a sub-agent to find it; don't ask the user",
-    "dispatch a subagent (the `subagent` tool) to find it; don't ask the user",
+    "dispatch a sub-agent with a fresh context window to find it; don't ask the user",
+    "dispatch a subagent with a fresh context window (the `subagent` tool) to find it; don't ask the user",
+  )
+})
+
+test('a fresh context window names `subagent`, not `subagent_fork`', () => {
+  applies(
+    'Start every subagent with a fresh context window.',
+    'Start every subagent with a fresh context window (`subagent`, not `subagent_fork`, which inherits this conversation).',
+  )
+  applies(
+    'Start it with a fresh context window.',
+    'Start it with a fresh context window (`subagent`, not `subagent_fork`, which inherits this conversation).',
   )
 })
 
@@ -186,8 +197,10 @@ test('rules are idempotent', () => {
     '- swapping to a **new harness** (Claude → Codex),',
     'Spin up a **background agent** to do the research.',
     'Call the Skill tool with "tdd" where possible, at pre-agreed seams.',
-    'Spawn 3+ subagents in parallel. Each must produce an interface.',
-    'dispatch a subagent to find it',
+    'Spawn 3+ subagents in parallel, each with a fresh context window. Each must produce an interface.',
+    'dispatch a subagent with a fresh context window to find it',
+    'Start every subagent with a fresh context window.',
+    'Start it with a fresh context window.',
     'naming which skills the next agent should call the `skill` tool for.',
   ].join('\n')
   const once = adapt(upstream).text

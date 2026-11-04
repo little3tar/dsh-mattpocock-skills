@@ -8,7 +8,7 @@ Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 - **Standards**: does the code conform to this repo's documented coding standards?
 - **Spec**: does the code faithfully implement the originating issue / spec?
 
-Both axes run as **parallel subagents** so they don't pollute each other's context, then this skill aggregates their findings.
+Both axes run as **parallel subagents** so they don't pollute each other's context, then this skill aggregates their findings. Start every subagent with a fresh context window (`subagent`, not `subagent_fork`, which inherits this conversation).
 
 The issue tracker should have been provided to you. If not, tell the user to run `/setup-matt-pocock-skills`.
 
