@@ -13,6 +13,8 @@ import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { PACK_PREFIX } from './sync-upstream.mjs'
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 /** Upstream artifacts that must not survive into the dsh pack. */
@@ -24,10 +26,10 @@ const LEFTOVERS = [
   // ask-matt is a catalogue of the commands the *user* types, so its slashes stay.
   {
     label: 'slash-prefixed model-side skill reference',
-    pattern: /`\/(codebase-design|grilling|domain-modeling|grill-with-docs|improve-codebase-architecture)`/,
-    skipFiles: ['ask-matt/SKILL.md'],
+    pattern: /`\/(dsh-)?(codebase-design|grilling|domain-modeling|grill-with-docs|improve-codebase-architecture)`/,
+    skipFiles: [PACK_PREFIX + 'ask-matt/SKILL.md'],
   },
-  { label: 'model-facing slash instruction (use the `skill` tool)', pattern: /[Uu]se \/(tdd|code-review)\b/ },
+  { label: 'model-facing slash instruction (use the `skill` tool)', pattern: /[Uu]se \/(dsh-)?(tdd|code-review)\b/ },
   { label: 'unnormalised "background agent" (use "background subagent")', pattern: /background agent/ },
   { label: 'harness-swap example still names Claude/Codex', pattern: /Claude → Codex/ },
 ]
@@ -92,6 +94,7 @@ async function main() {
       continue
     }
     if (fields.name !== name) problems.push(`${name}: frontmatter name "${fields.name}" != directory name`)
+    if (!name.startsWith(PACK_PREFIX)) problems.push(`${name}: directory name must start with "${PACK_PREFIX}"`)
     if (!fields.description) problems.push(`${name}: frontmatter has no description (the only routing signal)`)
     for (const key of Object.keys(fields)) {
       if (!['name', 'description', 'whenToUse', 'metadata', 'disable-model-invocation', 'user-invocable'].includes(key)) {
@@ -121,7 +124,7 @@ async function main() {
     process.exitCode = 1
     return
   }
-  console.log(`verify-skills: ok — ${names.length} skills, ${fileCount} files, frontmatter and adaptation checks passed`)
+  console.log(`verify-skills: ok — ${names.length} skills, ${fileCount} files, frontmatter, naming and adaptation checks passed`)
 }
 
 await main()

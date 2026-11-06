@@ -17,7 +17,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 
-import { adapt, applyChanges } from './sync-upstream.mjs'
+import { adapt, applyChanges, namespace } from './sync-upstream.mjs'
 
 const applies = (input, expected) => assert.equal(adapt(input).text, expected)
 
@@ -264,4 +264,69 @@ test('applyChanges writes the requested line endings', async () => {
   } finally {
     await cleanup()
   }
+})
+
+const PROMOTED = [
+  'ask-matt',
+  'code-review',
+  'codebase-design',
+  'domain-modeling',
+  'grill-with-docs',
+  'grilling',
+  'implement-spec',
+  'improve-codebase-architecture',
+  'pr',
+  'prototype',
+  'research',
+  'tdd',
+  'to-spec',
+  'to-tickets',
+  'triage',
+  'wayfinder',
+]
+
+test('namespace: skill-tool names and backticked slash gestures get the prefix', () => {
+  assert.equal(
+    namespace('Call the `skill` tool with name `tdd`, then `code-review`.', PROMOTED),
+    'Call the `skill` tool with name `dsh-tdd`, then `dsh-code-review`.',
+  )
+  assert.equal(
+    namespace('**`/grill-with-docs`** sharpens the plan; `/tdd` builds it.', PROMOTED),
+    '**`/dsh-grill-with-docs`** sharpens the plan; `/dsh-tdd` builds it.',
+  )
+})
+
+test('namespace: ticket-type labels and literal words keep their name', () => {
+  const text = [
+    'one of `research`, `prototype`, `grilling`, `task`',
+    'ticket type (`research`/`prototype`/`grilling`/`task`)',
+    'write `mr` in place of `pr`',
+    'include the word `prototype`',
+    'Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`)',
+  ].join('; ')
+  assert.equal(namespace(text, PROMOTED), text)
+  assert.equal(
+    namespace('For each `research` ticket, call the `skill` tool with name `research`.', PROMOTED),
+    'For each `research` ticket, call the `skill` tool with name `dsh-research`.',
+  )
+})
+
+test('namespace: frontmatter name and plain slash gestures are renamed', () => {
+  const text = '---\nname: implement-spec\ndescription: "Implement /to-spec and /to-tickets."\n---\n'
+  assert.equal(
+    namespace(text, PROMOTED, 'implement-spec'),
+    '---\nname: dsh-implement-spec\ndescription: "Implement /dsh-to-spec and /dsh-to-tickets."\n---\n',
+  )
+})
+
+test('namespace: URLs, closing tags, relative links and un-promoted names stay put', () => {
+  const text = 'see https://example.com/research and </pre> and the [link](./triage) and `/compact`'
+  assert.equal(namespace(text, PROMOTED), text)
+})
+
+test('namespace is idempotent', () => {
+  const text = 'Call the `skill` tool with name `tdd`; the `code-review` skill runs `/grilling`.'
+  const once = namespace(text, PROMOTED)
+  assert.notEqual(once, text)
+  assert.equal(namespace(once, PROMOTED), once)
 })

@@ -3,10 +3,11 @@
  * Generate this repository's skills/ straight from upstream mattpocock/skills.
  *
  * The pack is a pure function of upstream: every promoted skill file is read
- * from the target commit, passed through the dsh adaptation rules below, and
- * written out. There is no merge base and no three-way merge, so a sync cannot
- * conflict. Upstream rewording that invalidates a rule is surfaced instead: the
- * rule stops firing, and --check reports it.
+ * from the target commit, passed through the dsh adaptation rules below, then
+ * renamed under the pack prefix (PACK_PREFIX), and written out. There is no
+ * merge base and no three-way merge, so a sync cannot conflict. Upstream
+ * rewording that invalidates a rule is surfaced instead: the rule stops
+ * firing, and --check reports it.
  *
  * Usage:
  *   node scripts/sync-upstream.mjs [--to <sha|HEAD>] [--out <dir>] [--cache <dir>]
@@ -191,6 +192,65 @@ const ADAPT_RULES = [
   },
 ]
 
+/** Every skill this pack installs carries this prefix, so it never hides a copy of the same upstream skill. */
+export const PACK_PREFIX = 'dsh-'
+
+/**
+ * Backticked phrases where a promoted skill name is a ticket-type label or a
+ * literal word rather than a reference to the skill. They are masked before the
+ * blanket rename below and restored afterwards.
+ */
+const NAMESPACE_PROTECT = [
+  'one of `research`, `prototype`, `grilling`, `task`',
+  '`wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`)',
+  'ticket type (`research`/`prototype`/`grilling`/`task`)',
+  'For each `research` ticket',
+  'the word `prototype`',
+  '`mr` in place of `pr`',
+]
+
+/**
+ * Rename this pack's skills to `dsh-<name>`, so a machine that also installs the
+ * official skills can tell the two apart. `names` is the promoted upstream set;
+ * a skill's own frontmatter `name` is renamed when `selfName` is given.
+ *
+ * References are renamed in the forms the pack uses: backticked tool names,
+ * backticked slash gestures, and plain `/name` after whitespace or a bracket.
+ * Ticket-type labels and literal words in NAMESPACE_PROTECT keep their name.
+ * Renaming is idempotent: `dsh-` names are not in `names`, so a second pass is a
+ * no-op.
+ */
+export function namespace(text, names, selfName = '') {
+  const promoted = new Set(names)
+  const nul = String.fromCharCode(0)
+  const quote = '`'
+  const slash = '/'
+  let out = text
+  if (selfName !== '') {
+    out = out.replace(new RegExp('^name: ' + selfName + '$', 'm'), 'name: ' + PACK_PREFIX + selfName)
+  }
+
+  const masked = []
+  for (const phrase of NAMESPACE_PROTECT) {
+    if (!out.includes(phrase)) continue
+    out = out.split(phrase).join(nul + masked.length + nul)
+    masked.push(phrase)
+  }
+
+  out = out.replace(/`([a-z0-9-]+)`/g, (whole, token) => (promoted.has(token) ? quote + PACK_PREFIX + token + quote : whole))
+  out = out.replace(
+    /`\/([a-z0-9-]+)`/g,
+    (whole, token) => (promoted.has(token) ? quote + slash + PACK_PREFIX + token + quote : whole),
+  )
+  out = out.replace(
+    /(^|[^a-z0-9-./<:`])\/([a-z0-9-]+)(?![a-z0-9-])/g,
+    (whole, lead, token) => (promoted.has(token) ? lead + slash + PACK_PREFIX + token : whole),
+  )
+
+  for (let index = 0; index < masked.length; index++) out = out.split(nul + index + nul).join(masked[index])
+  return out
+}
+
 function arg(name, fallback = undefined) {
   const index = process.argv.indexOf(name)
   return index === -1 ? fallback : process.argv[index + 1]
@@ -361,11 +421,13 @@ async function main() {
     const manifest = JSON.parse(await readText(path.join(upstreamDir, MANIFEST)))
     const promoted = manifest.skills.map((entry) => entry.replace(/^\.\/skills\//, ''))
     const promotedNames = new Set(promoted.map((entry) => path.posix.basename(entry)))
+    const packNames = new Set([...promotedNames].map((name) => PACK_PREFIX + name))
 
     // Generate the whole pack from upstream, then compare: the pack must be
     // exactly what the rules produce, with nothing added or left behind.
     const generatedDir = path.join(workRoot, 'generated')
     const fired = new Set()
+    let namespaceFired = false
     let files = 0
     for (const entry of promoted) {
       const name = path.posix.basename(entry)
@@ -373,12 +435,17 @@ async function main() {
         if (EXCLUDED_FILES.has(rel)) continue
         const { text, fired: rules } = adapt(await readText(path.join(upstreamDir, 'skills', entry, rel)), `${name}/${rel}`)
         for (const rule of rules) fired.add(rule)
-        await writeText(path.join(generatedDir, name, rel), text, eol)
+        const renamed = namespace(text, promotedNames, rel === 'SKILL.md' ? name : '')
+        if (renamed !== text) namespaceFired = true
+        await writeText(path.join(generatedDir, PACK_PREFIX + name, rel), renamed, eol)
         files++
       }
     }
-    const staleRules = ADAPT_RULES.map((rule) => rule.name).filter((name) => !fired.has(name))
-    const diff = await compareTrees(outDir, generatedDir, promotedNames)
+    const staleRules = [
+      ...ADAPT_RULES.map((rule) => rule.name).filter((ruleName) => !fired.has(ruleName)),
+      ...(namespaceFired ? [] : ['dsh- namespace']),
+    ]
+    const diff = await compareTrees(outDir, generatedDir, packNames)
     const drift = diff.changed.length + diff.added.length + diff.extraFiles.length + diff.extraSkillDirs.length
 
     if (drift === 0) {

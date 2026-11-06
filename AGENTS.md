@@ -14,7 +14,7 @@ The user's dsh version determines nothing about these steps — all channels wor
 
    This pack is **not published to npm**: always install it from git, as above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package.
 
-   A bare `github:` spec resolves the default branch, so a re-install can move. To pin a release: `dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills#v0.3.4` (or a commit sha).
+   A bare `github:` spec resolves the default branch, so a re-install can move. To pin a release: `dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills#v0.4.0` (or a commit sha).
 
    If `dsh` is not a global command, run the same through the CLI package: `npx -y @deepseek-ai/dsh plugin --profile <name> add github:little3tar/dsh-mattpocock-skills` (first run downloads the CLI; or install it once with `npm install -g @deepseek-ai/dsh`).
 
@@ -28,13 +28,13 @@ The user's dsh version determines nothing about these steps — all channels wor
 
 If this clone is the user's own checkout, install from the local path: `dsh plugin --profile <name> add <absolute path of this repo>`.
 
-After installing either way, tell the user: new sessions pick the skills up automatically; to start, run `/setup-matt-pocock-skills` once in the target repo, then `/ask-matt`.
+After installing either way, tell the user: new sessions pick the skills up automatically; to start, run `/dsh-setup-matt-pocock-skills` once in the target repo, then `/dsh-ask-matt`.
 
 **Ranks, and the layer caveat.** *Within one layer*, lower rank wins: project roots 100/200, a *custom* root 300 (what this bundle mounts), user roots 400/500, bundled 600. That order decides nothing **across** layers, though — the skill registry is host+per-scope layered and merges last-wins (`collectFresh` walks `[global, ...chainLayers(scope)]`, each layer overwriting the previous), so the **nearest scope beats the global layer whatever the rank**. Deployment-level providers such as a repository plugin register into the *global* layer; in the web profile the host `skill-filesystem` row is disabled and a preset mounts its own with default roots on, so `~/.dsh/skills` (400) is collected *in the preset layer* and **wins over this bundle's 300**. Practical consequence: installing the bundle does **not** shadow a same-named directory copy — remove that copy, or deploy one channel only. Rank 300 is also the shared custom rank (the preset uses one too), so a tie falls to provider registration order rather than never happening.
 
 ## Repository layout
 
-- `skills/` — the 27 adapted skills (`<name>/SKILL.md`, dsh format)
+- `skills/` — the 27 adapted skills (`dsh-<name>/SKILL.md`, dsh format)
 - `cordis.patch.yml` + `package.json` — the dsh bundle: it mounts a second instance of the built-in filesystem skill provider over `skills/` as a *custom* root (rank 300). This package ships no plugin code of its own.
 - `scripts/install.sh`, `scripts/install.ps1` — directory-drop installers
 - `scripts/verify-skills.mjs` — frontmatter contract and adaptation checks; run before committing
@@ -50,7 +50,7 @@ After installing either way, tell the user: new sessions pick the skills up auto
 - Model-facing instructions load other skills via the `skill` tool ("call the `skill` tool with name `x`"); `/name` slash syntax is reserved for text the user types (a valid dsh gesture for every skill here).
 - Subagents are spawned with the `subagent` tool; parallel means several calls in one message, background means `run_in_background: true`.
 - `/compact` is a real dsh command; there is no `/clear` — write "start a new session" instead.
-- Keep all 27 skill names identical to upstream (shadowing and re-sync depend on it). Run `npm test` and `node scripts/verify-skills.mjs` before committing.
+- Keep the `dsh-` prefix on every skill directory and frontmatter `name`: the namespace step in `scripts/sync-upstream.mjs` derives it from `PACK_PREFIX` (upstream name + prefix), and `verify-skills.mjs` enforces it. References to a skill carry the prefix too, except the ticket-type labels and literal words masked in `NAMESPACE_PROTECT`. Run `npm test` and `node scripts/verify-skills.mjs` before committing.
 - A deliberate change to a skill body belongs in the adaptation-rule table in `scripts/sync-upstream.mjs` (with a unit test and a PROVENANCE entry): `skills/` is regenerated from upstream, so a hand edit there is overwritten by the next sync.
 
 ## Re-syncing from upstream

@@ -4,7 +4,7 @@ English | [中文](README.zh-CN.md)
 
 [Matt Pocock's engineering skills](https://github.com/mattpocock/skills) — grilling, spec/ticket flows, TDD, code review, domain modelling — adapted for [DeepSeek Harness (dsh)](https://github.com/deepseek-harness). 27 skills, one install, every dsh session.
 
-The bodies were rewritten for dsh's tool surface (`skill`, `subagent`, session commands) rather than Claude Code's; skill names and descriptions stay identical to upstream. See [PROVENANCE.md](PROVENANCE.md) for the pinned upstream commit and the per-skill adaptation log.
+The bodies were rewritten for dsh's tool surface (`skill`, `subagent`, session commands) rather than Claude Code's; every skill keeps upstream's description and takes a `dsh-` name prefix (`dsh-ask-matt`, `dsh-tdd`, …), so this pack can sit next to an official copy without colliding. See [PROVENANCE.md](PROVENANCE.md) for the pinned upstream commit and the per-skill adaptation log.
 
 ## Install
 
@@ -26,7 +26,7 @@ npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpococ
 
 That is a pnpm install into the profile plus layer activation; verify with `dsh --profile web --dump-config` (a `# == dsh-mattpocock-skills` layer appears), then start a session on that profile.
 
-A bare `github:` spec resolves the repository's **default branch**, so a re-install can pick up newer commits. For a reproducible install, pin a release: `dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.4` (or a commit sha).
+A bare `github:` spec resolves the repository's **default branch**, so a re-install can pick up newer commits. For a reproducible install, pin a release: `dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.4.0` (or a commit sha).
 
 > **Not published to npm.** Install from git as shown above. The bare name `dsh-mattpocock-skills` resolves to a different, unrelated npm package — do not use it.
 
@@ -72,27 +72,27 @@ Or, for a web-profile preset that carries the skills: copy this repo's `skills/`
 
 | Skill | What it does |
 |---|---|
-| `ask-matt` | Router: which skill or flow fits your situation |
-| `grill-me` / `grill-with-docs` | Relentless interview to sharpen a plan; the docs variant persists to GLOSSARY.md + ADRs |
-| `to-spec` / `to-tickets` | Synthesize the conversation into a spec / tracer-bullet tickets with blocking edges |
-| `implement` | Build a spec or ticket, driving TDD and ending in code review |
-| `implement-spec` | Build a whole spec in one run: tickets as a task graph, implementer subagents across the ready frontier, one integration branch |
-| `pr` | Write the PR body (template adapted from Dex Horthy's `show-me` skill) |
-| `retro` | Run a retrospective on a coding session and propose environment improvements |
-| `triage` | Move issues and external PRs through a triage state machine |
-| `wayfinder` | Chart a huge foggy effort as decision tickets on the tracker |
-| `improve-codebase-architecture` | Scan for deepening opportunities, HTML report, then grill the pick |
-| `handoff` | Compact the conversation into a handoff document |
-| `teach` | Multi-session teaching workspace |
-| `to-questionnaire` | Turn an unanswerable decision into a questionnaire for someone else |
-| `wait-what` | Re-pitch the last message in plain language |
-| `setup-matt-pocock-skills` | One-time per-repo setup: issue tracker, triage labels, doc layout — run this first |
+| `dsh-ask-matt` | Router: which skill or flow fits your situation |
+| `dsh-grill-me` / `dsh-grill-with-docs` | Relentless interview to sharpen a plan; the docs variant persists to GLOSSARY.md + ADRs |
+| `dsh-to-spec` / `dsh-to-tickets` | Synthesize the conversation into a spec / tracer-bullet tickets with blocking edges |
+| `dsh-implement` | Build a spec or ticket, driving TDD and ending in code review |
+| `dsh-implement-spec` | Build a whole spec in one run: tickets as a task graph, implementer subagents across the ready frontier, one integration branch |
+| `dsh-pr` | Write the PR body (template adapted from Dex Horthy's `show-me` skill) |
+| `dsh-retro` | Run a retrospective on a coding session and propose environment improvements |
+| `dsh-triage` | Move issues and external PRs through a triage state machine |
+| `dsh-wayfinder` | Chart a huge foggy effort as decision tickets on the tracker |
+| `dsh-improve-codebase-architecture` | Scan for deepening opportunities, HTML report, then grill the pick |
+| `dsh-handoff` | Compact the conversation into a handoff document |
+| `dsh-teach` | Multi-session teaching workspace |
+| `dsh-to-questionnaire` | Turn an unanswerable decision into a questionnaire for someone else |
+| `dsh-wait-what` | Re-pitch the last message in plain language |
+| `dsh-setup-matt-pocock-skills` | One-time per-repo setup: issue tracker, triage labels, doc layout — run this first |
 
 **Disciplines (model-invoked — the agent reaches for them, or you can ask by name)**
 
-`grilling`, `tdd`, `code-review`, `domain-modeling`, `codebase-design`, `prototype`, `research`, `diagnosing-bugs`, `wizard`, `writing-for-agents`.
+`dsh-grilling`, `dsh-tdd`, `dsh-code-review`, `dsh-domain-modeling`, `dsh-codebase-design`, `dsh-prototype`, `dsh-research`, `dsh-diagnosing-bugs`, `dsh-wizard`, `dsh-writing-for-agents`.
 
-Start with `/ask-matt` after running `/setup-matt-pocock-skills` once in your repo.
+Start with `/dsh-ask-matt` after running `/dsh-setup-matt-pocock-skills` once in your repo.
 
 > Upstream dropped `resolving-merge-conflicts` after v1.2.3, so it is not part of this pack.
 

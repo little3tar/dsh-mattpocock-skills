@@ -85,4 +85,4 @@ done
 
 echo ""
 echo "done: $installed skill(s) -> $target"
-echo "try it: start a dsh session and type /ask-matt"
+echo "try it: start a dsh session and type /dsh-ask-matt"

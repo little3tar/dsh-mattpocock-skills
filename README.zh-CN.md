@@ -4,7 +4,7 @@
 
 [Matt Pocock 的工程技能集](https://github.com/mattpocock/skills)——拷问式访谈（grilling）、spec/工单流、TDD、代码评审、领域建模——面向 [DeepSeek Harness (dsh)](https://github.com/deepseek-harness) 的适配版。27 个技能，一次安装，所有 dsh 会话可用。
 
-技能正文已按 dsh 的工具面（`skill`、`subagent`、会话命令）改写而非照搬 Claude Code；技能名与描述与上游完全一致。上游钉定 commit 与逐技能适配日志见 [PROVENANCE.md](PROVENANCE.md)。
+技能正文已按 dsh 的工具面（`skill`、`subagent`、会话命令）改写而非照搬 Claude Code；每个技能保留上游的描述，名称前统一加 `dsh-` 前缀（`dsh-ask-matt`、`dsh-tdd` 等），因此可与官方技能包共存而不重名。上游钉定 commit 与逐技能适配日志见 [PROVENANCE.md](PROVENANCE.md)。
 
 ## 安装
 
@@ -26,7 +26,7 @@ npx -y @deepseek-ai/dsh plugin --profile web add github:little3tar/dsh-mattpococ
 
 这是向 profile 内做一次 pnpm 安装并激活配置层；用 `dsh --profile web --dump-config` 验证（会出现 `# == dsh-mattpocock-skills` 层），然后在该 profile 上开启会话。
 
-不带 ref 的 `github:` 写法解析的是仓库**默认分支**，重新安装可能拿到更新的提交。要可复现安装就钉住发布：`dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.3.4`（或写 commit sha）。
+不带 ref 的 `github:` 写法解析的是仓库**默认分支**，重新安装可能拿到更新的提交。要可复现安装就钉住发布：`dsh plugin --profile web add github:little3tar/dsh-mattpocock-skills#v0.4.0`（或写 commit sha）。
 
 > **本包未发布到 npm。** 请按上面的 git 形式安装。裸包名 `dsh-mattpocock-skills` 指向 npm 上另一个无关的包，不要用它。
 
@@ -72,27 +72,27 @@ agent 会读本仓库的 [AGENTS.md](AGENTS.md) 并完成安装（clone + `scrip
 
 | 技能 | 用途 |
 |---|---|
-| `ask-matt` | 路由器：当前场景该用哪个技能/流程 |
-| `grill-me` / `grill-with-docs` | 拷问式访谈打磨计划；带文档版会沉淀 GLOSSARY.md + ADR |
-| `to-spec` / `to-tickets` | 把对话综合成 spec / 带阻塞边的 tracer-bullet 工单 |
-| `implement` | 按 spec/工单实现，驱动 TDD，收尾代码评审 |
-| `implement-spec` | 一次跑完整个 spec：工单当任务图，实现型 subagent 并行吃 frontier，统一落在集成分支 |
-| `pr` | 撰写 PR 正文（模板改编自 Dex Horthy 的 `show-me` 技能） |
-| `retro` | 对一次编码会话做复盘，提出环境改进 |
-| `triage` | 用状态机处理 issue 与外部 PR |
-| `wayfinder` | 把庞大模糊的工作规划成 tracker 上的决策工单地图 |
-| `improve-codebase-architecture` | 扫描深化机会、出 HTML 报告、拷问所选项 |
-| `handoff` | 把当前会话压缩成交接文档 |
-| `teach` | 多会话教学工作区 |
-| `to-questionnaire` | 把无法独自回答的决策变成给他人的问卷 |
-| `wait-what` | 用平实语言重新解释上一条消息 |
-| `setup-matt-pocock-skills` | 每仓库一次的初始化：issue tracker、triage 标签、文档布局——先跑这个 |
+| `dsh-ask-matt` | 路由器：当前场景该用哪个技能/流程 |
+| `dsh-grill-me` / `dsh-grill-with-docs` | 拷问式访谈打磨计划；带文档版会沉淀 GLOSSARY.md + ADR |
+| `dsh-to-spec` / `dsh-to-tickets` | 把对话综合成 spec / 带阻塞边的 tracer-bullet 工单 |
+| `dsh-implement` | 按 spec/工单实现，驱动 TDD，收尾代码评审 |
+| `dsh-implement-spec` | 一次跑完整个 spec：工单当任务图，实现型 subagent 并行吃 frontier，统一落在集成分支 |
+| `dsh-pr` | 撰写 PR 正文（模板改编自 Dex Horthy 的 `show-me` 技能） |
+| `dsh-retro` | 对一次编码会话做复盘，提出环境改进 |
+| `dsh-triage` | 用状态机处理 issue 与外部 PR |
+| `dsh-wayfinder` | 把庞大模糊的工作规划成 tracker 上的决策工单地图 |
+| `dsh-improve-codebase-architecture` | 扫描深化机会、出 HTML 报告、拷问所选项 |
+| `dsh-handoff` | 把当前会话压缩成交接文档 |
+| `dsh-teach` | 多会话教学工作区 |
+| `dsh-to-questionnaire` | 把无法独自回答的决策变成给他人的问卷 |
+| `dsh-wait-what` | 用平实语言重新解释上一条消息 |
+| `dsh-setup-matt-pocock-skills` | 每仓库一次的初始化：issue tracker、triage 标签、文档布局——先跑这个 |
 
 **纪律类（模型调用——agent 自行取用，也可点名请求）**
 
-`grilling`、`tdd`、`code-review`、`domain-modeling`、`codebase-design`、`prototype`、`research`、`diagnosing-bugs`、`wizard`、`writing-for-agents`。
+`dsh-grilling`、`dsh-tdd`、`dsh-code-review`、`dsh-domain-modeling`、`dsh-codebase-design`、`dsh-prototype`、`dsh-research`、`dsh-diagnosing-bugs`、`dsh-wizard`、`dsh-writing-for-agents`。
 
-在仓库里先跑一次 `/setup-matt-pocock-skills`，之后从 `/ask-matt` 开始。
+在仓库里先跑一次 `/dsh-setup-matt-pocock-skills`，之后从 `/dsh-ask-matt` 开始。
 
 > 上游在 v1.2.3 之后移除了 `resolving-merge-conflicts`，因此本技能包不再包含它。
 

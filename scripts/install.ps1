@@ -68,4 +68,4 @@ foreach ($skill in $skillNames) {
 
 Write-Host ""
 Write-Host "done: $installed skill(s) -> $target"
-Write-Host "try it: start a dsh session and type /ask-matt"
+Write-Host "try it: start a dsh session and type /dsh-ask-matt"
